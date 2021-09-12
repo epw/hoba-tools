@@ -1,0 +1,22 @@
+<!doctype html>
+<!-- This is the actual login page shown when logging in is required by a subdirectory.
+
+It must send a POST request with action="", with fields httpd_username, httpd_password, and login=Login.
+-->
+<html>
+  <head>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="stylesheet" href="/hoba-style.css">
+    <script src="/hoba-script.js" async defer></script>
+  </head>
+  <body>
+    <form id="login" method="POST" action="">
+      <input type="hidden" id="username" name="httpd_username" value="" />
+      <!-- Password has dummy value to keep Apache auth stuff happy -->
+      <input type="hidden" id="password" name="httpd_password" value="foo" />
+
+      <div><button type="button" id="create" onclick="create_user()">Create</button></div>
+      <div><button type="button" id="loginbutton" onclick="login()">Login</button></div>
+    </form>
+  </body>
+</html>
