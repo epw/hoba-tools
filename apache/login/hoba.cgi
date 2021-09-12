@@ -1,6 +1,6 @@
 #! /usr/bin/env python3
 
-print("Content-Type: text/plain\n")
+print("Content-Type: text/plain")
 
 import cgi, cgitb
 cgitb.enable()
@@ -19,12 +19,19 @@ def api(create):
     u = str(uuid.uuid4())
     cursor.execute("INSERT INTO authn (username, password) VALUES (?, '$apr1$shtMLQ5W$i1kRTLjR2jNPzWQmXWfbT0')", (u,))
     conn.commit()
+    print()
     print(u)
+  else:
+    print()
+    print("No action given.")
 
 def main():
-  params = cgi.FieldStorage()
-  api(params.getfirst("create"))
-
+  try:
+    params = cgi.FieldStorage()
+    api(params.getfirst("create"))
+  except:
+    print("Status: 500 Internal Server Error\n")
+    raise
 
 if __name__ == "__main__":
   main()
