@@ -17,7 +17,7 @@ def api(create):
 
   if create:
     u = str(uuid.uuid4())
-    cursor.execute("INSERT INTO authn (username, password) VALUES (?, '$apr1$shtMLQ5W$i1kRTLjR2jNPzWQmXWfbT0')", (u,))
+    cursor.execute("INSERT INTO authn (username) VALUES (?)", (u,))
     conn.commit()
     print()
     print(u)

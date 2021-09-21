@@ -13,7 +13,7 @@ It must send a POST request with action="", with fields httpd_username, httpd_pa
     <form id="login" method="POST" action="">
       <input type="hidden" id="username" name="httpd_username" value="" />
       <!-- Password has dummy value to keep Apache auth stuff happy -->
-      <input type="hidden" id="password" name="httpd_password" value="foo" />
+      <input type="hidden" id="password" name="httpd_password" value="" />
 
       <div><button type="button" id="create" onclick="create_user()">Create</button></div>
       <div><button type="button" id="loginbutton" onclick="login()">Login</button></div>
