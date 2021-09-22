@@ -10,6 +10,8 @@ CREATE TABLE accounts (
 
 CREATE TABLE pubkeys (
        keydata TEXT,
+       challenge TEXT,
+       token TEXT,
        account_id INT,
 
        FOREIGN KEY (account_id)
