@@ -3,6 +3,7 @@
 import cgi, cgitb
 cgitb.enable()
 
+import base64
 from Crypto.Signature import pkcs1_15
 from Crypto.Hash import SHA256
 from Crypto.PublicKey import RSA
@@ -31,15 +32,12 @@ def api(action, pubkey=None, signature=None):
     cursor.execute("UPDATE pubkeys SET challenge = ? WHERE keydata = ?", (challenge, pubkey))
     json.dump({"value": str(challenge)}, sys.stdout)
   elif action == "token":
-    # Dummy action
-    json.dump({"value": "token"}, sys.stdout)
-
     cursor.execute("SELECT challenge FROM pubkeys WHERE keydata = ?", (pubkey,))
     challenge = cursor.fetchone()[0]
     h = SHA256.new(challenge.encode("utf8"))
     public_key = RSA.import_key(pubkey)
 
-    signature = bytes(map(int, signature.split(",")))
+    signature = bytes.fromhex(signature)
     
     try:
       pkcs1_15.new(public_key).verify(h, signature)
@@ -48,7 +46,7 @@ def api(action, pubkey=None, signature=None):
       json.dump({"token": token}, sys.stdout)
     except (ValueError, TypeError) as e:
       tb = traceback.format_exc()
-      json.dump({"error": True, "traceback": tb, "signature": str(list(signature)), "challenge": challenge}, sys.stdout)
+      json.dump({"error": True, "traceback": tb, "signature": str(signature), "challenge": challenge}, sys.stdout)
   else:
     json.dump({"error": "No action given"}, sys.stdout)
   conn.commit()

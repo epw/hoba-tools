@@ -57,6 +57,10 @@ async function create_user() {
 //    init();
 }
 
+function buf2hex(buf) {
+  return Array.prototype.map.call(new Uint8Array(buf), x=>(('00'+x.toString(16)).slice(-2))).join('');
+}
+
 async function sign_challenge(keydata) {
     const private_key = await crypto.subtle.importKey(
 	PRIV_KEY_EXPORT_FORMAT,
@@ -76,13 +80,13 @@ async function sign_challenge(keydata) {
 	return;
     }
     const challenge = await res.json();
-    const signature = await crypto.subtle.sign(KEY_ALG, private_key, new Uint8Array(challenge.value));
-    form.set("signature", encoder.encode(signature));
+    let signature = await crypto.subtle.sign(KEY_ALG, private_key, encoder.encode(challenge.value));
+    signature = buf2hex(signature);
+    form.set("signature", signature);
     const token_res = await fetch("/hoba.cgi?action=token", {
 	method: "POST",
 	body: form
     });
-    console.log("token", await token_res.text());
     if (token_res.status != 200) {
 	console.error("Token acquisition error " + token_res.status);
 	console.error(await res.text());
