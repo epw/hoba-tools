@@ -24,7 +24,7 @@ const encoder = new TextEncoder(encoding);
 async function get_pem(public_key) {
     const keydata = await crypto.subtle.exportKey("spki", public_key);
     const body = btoa(String.fromCharCode(...new Uint8Array(keydata)));
-    return "-----BEGIN PUBLIC KEY-----\n" + body.match(/.{1,64}/g).join("\n") + "\n-----END PUBLIC KEY-----";
+    return "-----BEGIN PUBLIC KEY-----\r\n" + body.match(/.{1,64}/g).join("\r\n") + "\r\n-----END PUBLIC KEY-----";
 };
 
 async function login() {
