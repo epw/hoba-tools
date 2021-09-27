@@ -32,6 +32,7 @@ async function login() {
 }
 
 async function create_user() {
+    console.log("Creating user");
     const keypair = await crypto.subtle.generateKey(KEY_ALG, true, ["sign", "verify"]);
     const private_key = await crypto.subtle.exportKey(PRIV_KEY_EXPORT_FORMAT, keypair.privateKey);
     const priv_buf = new Uint8Array(private_key);
@@ -62,6 +63,7 @@ function buf2hex(buf) {
 }
 
 async function sign_challenge(keydata) {
+    console.log("signing challenge");
     const private_key = await crypto.subtle.importKey(
 	PRIV_KEY_EXPORT_FORMAT,
 	keydata,
@@ -91,8 +93,11 @@ async function sign_challenge(keydata) {
 	console.error("Token acquisition error " + token_res.status);
 	console.error(await res.text());
     }
-    document.getElementById("token").value = (await token_res.json()).value;
-//    document.getElementById("login").submit();
+    const token_json = await token_res.json();
+    document.getElementById("pubkey").value = localStorage.getItem(STORAGE + S.PUBKEY);
+    document.getElementById("token").value = token_json.token;
+    console.log("Token saved:", token_json.token);
+    //    document.getElementById("login").submit();
 }
 
 

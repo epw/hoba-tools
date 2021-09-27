@@ -11,9 +11,8 @@ It must send a POST request with action="", with fields httpd_username, httpd_pa
   </head>
   <body>
     <form id="login" method="POST" action="">
-      <input type="hidden" id="token" name="httpd_username" value="" />
-      <!-- Password has dummy value to keep Apache auth stuff happy -->
-      <input type="hidden" id="password" name="httpd_password" value="" />
+      <input type="hidden" id="pubkey" name="httpd_username" value="" />
+      <input type="hidden" id="token" name="httpd_password" value="" />
 
       <div><button type="button" id="create" onclick="create_user()">Create</button></div>
       <div><button type="button" id="loginbutton" onclick="login()">Login</button></div>
