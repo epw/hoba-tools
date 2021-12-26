@@ -55,6 +55,7 @@ async function create_user() {
 	console.error("Error " + res.status);
 	console.error(body);
     }
+    console.log("User created");
 //    init();
 }
 
@@ -97,7 +98,7 @@ async function sign_challenge(keydata) {
     document.getElementById("pubkey").value = localStorage.getItem(STORAGE + S.PUBKEY);
     document.getElementById("token").value = token_json.token;
     console.log("Token saved:", token_json.token);
-    //    document.getElementById("login").submit();
+    //document.getElementById("login").submit();
 }
 
 

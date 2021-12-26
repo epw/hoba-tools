@@ -19,3 +19,15 @@ CREATE TABLE pubkeys (
 	       ON DELETE CASCADE
 	       ON UPDATE CASCADE
 );
+
+CREATE TABLE session (
+       key TEXT,
+       value TEXT,
+       expiry INT,
+       account_id INT,
+
+       FOREIGN KEY (account_id)
+       	       REFERENCES accounts(rowid)
+	       ON DELETE CASCADE
+	       ON UPDATE CASCADE
+);

@@ -7,6 +7,7 @@ import base64
 from Crypto.Signature import pkcs1_15
 from Crypto.Hash import SHA256
 from Crypto.PublicKey import RSA
+from http import cookies
 import json
 import sqlite3
 import subprocess
@@ -17,15 +18,21 @@ import uuid
 AUTH_DB = "/var/local/eric/auth-form.sqlite"
 
 def htpasswd(s):
-  return subprocess.run(["htpasswd", "-nb", "", s], capture_output=True).stdout.decode("utf8")[2:].strip()
+  return subprocess.run(["htpasswd", "-nb", "", s], capture_output=True).stdout.decode("utf8")[1:].strip()
 
 def create_account_from_pubkey(cursor, pubkey):
   cursor.execute("INSERT INTO accounts (name) VALUES (NULL)");
   cursor.execute("INSERT INTO pubkeys (keydata, account_id) VALUES (?, ?)", (pubkey, cursor.lastrowid))
   return True
 
+def json_output(cookie, obj):
+  cookie.output()
+  print()
+  json.dump(obj, sys.stdout)
+
 def api(action, pubkey=None, signature=None):
-  print("Content-Type: application/json\n")
+  C = cookies.SimpleCookie()
+  print("Content-Type: application/json")
 
   conn = sqlite3.connect(AUTH_DB)
   conn.row_factory = sqlite3.Row
@@ -33,7 +40,7 @@ def api(action, pubkey=None, signature=None):
 
   if action == "create":
     # Really just want an account record to exist, no values, but you can't insert ()
-    json.dump(create_account_from_pubkey(cursor, pubkey), sys.stdout);
+    json_output(C, create_account_from_pubkey(cursor, pubkey))
   elif action == "challenge":
     cursor.execute("SELECT rowid FROM pubkeys WHERE keydata = ?", (pubkey,))
     row = cursor.fetchone()
@@ -41,7 +48,7 @@ def api(action, pubkey=None, signature=None):
       assert create_account_from_pubkey(cursor, pubkey)
     challenge = str(uuid.uuid4())
     cursor.execute("UPDATE pubkeys SET challenge = ? WHERE keydata = ?", (challenge, pubkey))
-    json.dump({"value": str(challenge)}, sys.stdout)
+    json_output(C, {"value": str(challenge)})
   elif action == "token":
     cursor.execute("SELECT challenge FROM pubkeys WHERE keydata = ?", (pubkey,))
     challenge = cursor.fetchone()[0]
@@ -52,12 +59,13 @@ def api(action, pubkey=None, signature=None):
       pkcs1_15.new(public_key).verify(h, signature)
       token = str(uuid.uuid4())
       cursor.execute("UPDATE pubkeys SET challenge = NULL, token = ? WHERE keydata = ?", (htpasswd(token), pubkey))
-      json.dump({"token": token}, sys.stdout)
+      C["sessiondbd"] = token
+      json_output(C, {"token": token})
     except (ValueError, TypeError) as e:
       tb = traceback.format_exc()
-      json.dump({"error": True, "traceback": tb, "signature": str(signature), "challenge": challenge, "token": str(token)}, sys.stdout)
+      json_output(C, {"error": True, "traceback": tb, "signature": str(signature), "challenge": challenge, "token": str(token)})
   else:
-    json.dump({"error": "No action given"}, sys.stdout)
+    json_output(C, {"error": "No action given"})
   conn.commit()
 
 def main():
