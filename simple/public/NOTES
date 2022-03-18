@@ -23,3 +23,23 @@ hoba.py: Logic to connect to the database, and retrieve a logged-in user with a 
 hoba.js: Library to include on any page that needs to do AJAX calls for the authenticated user. Ideally, would also handle logging in, attaching to known page elements for UI.
 hoba.cgi: Server side of account management and authentication. Calls out to hoba.py for lowest level, but implements key logic, challenges, and establishing tokens.
 
+MVP TODO
+- Update schema so users have multiple public keys
+  - Separate pubkey table, has pubkey, challenge, and token
+  - Loop through them all when checking challenge or token
+- Make "bind account":
+  - Special URL, preferably a hoba.cgi action, that has as a URL param the user and secret. Makes a popup offering to bind this computer to the account specified (URL params also need to describe user in human-readable way, then)
+  - Probably interface is in hoba.cgi itself, though needs to include hoba.js in order to use standard account creation logic
+  - Just like creating account, but verifies secret matches for user row, then creates new pubkey for user and returns original user
+- Make "link account":
+  - A second <dialog> in hoba.js, this one offers logout and "make a link to login elsewhere"
+    - Also should offer "destroy credentials"
+  - Offers login link as:
+    - link
+    - QR code
+    - share API (like Wordle)
+    - blank for email to send to (also save email with account)
+      - Warn you need to get the email right, whoever gets this will be able to log in as you forever!
+  - Easy interface to attach "login management" button to any page
+- Switch from localStorage to indexeddb for (at least) private key
+- Test by copying essential files (should just be three) to a new project directory, maybe on a new computer
