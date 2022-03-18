@@ -6,6 +6,7 @@ cgitb.enable()
 import json
 import sys
 import traceback
+import uuid
 
 import db
 
@@ -24,8 +25,12 @@ def api(params):
   if a == "create":
     cursor.execute("INSERT INTO users (pubkey) VALUES (?)", (params.getfirst("pubkey"),))
     conn.commit()
-    output(True)
-  
+    output({"id": cursor.lastrowid})
+  if a == "challenge":
+    challenge = str(uuid.uuid4())
+    cursor.execute("UPDATE users SET token = ? WHERE rowid = ?", (challenge, params.getfirst("user")))
+    conn.commit()
+    output({"challenge": challenge})
   
 def main():
   params = cgi.FieldStorage()
