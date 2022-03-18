@@ -13,7 +13,7 @@ def get_user_or_redirect():
   conn = db.connect()
   cursor = conn.cursor()
   C = cookies.SimpleCookie(os.getenv("HTTP_COOKIE"))
-  if "user" in C:
+  if "user" in C and "token" in C:
     row = db.select(cursor, "SELECT token FROM users WHERE rowid = ?", (C["user"].value,))
     if row["token"] == C["token"].value:
       return row

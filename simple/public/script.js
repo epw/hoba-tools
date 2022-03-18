@@ -100,6 +100,11 @@ async function sign_challenge(challenge) {
 }
 
 async function login() {
+    if (!localStorage.getItem(STORAGE + S.PRIVKEY)) {
+	console.error("Can't login before user has been created.");
+	return;
+    }
+
     const user_id = localStorage.getItem(STORAGE + S.USER);
     
     const challenge_form = new FormData();
