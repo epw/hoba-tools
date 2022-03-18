@@ -11,3 +11,15 @@ The login page itself handles creating keypairs, requesting a new user from the 
 
 
 The client doesn't know how to re-authenticate a token, all it can do is present a token, or ask the server to generate a new one and send it along. This does mean a bad guy could interrupt a user by sending a "new token" request with their user ID, which could allow a DoS, so at some point this will have to require some kind of proof, itself.
+
+
+
+
+System slowly taking shape:
+
+There will be a small directory of files a user can copy into a user-visible, CGI-enabled directory on their Web server.
+
+hoba.py: Logic to connect to the database, and retrieve a logged-in user with a valid token. Can be imported into any CGI script that needs to authenticate the user.
+hoba.js: Library to include on any page that needs to do AJAX calls for the authenticated user. Ideally, would also handle logging in, attaching to known page elements for UI.
+hoba.cgi: Server side of account management and authentication. Calls out to hoba.py for lowest level, but implements key logic, challenges, and establishing tokens.
+
