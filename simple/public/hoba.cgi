@@ -47,7 +47,12 @@ def api(params):
     h = SHA256.new(user["challenge"].encode("utf8"))
     public_key = RSA.import_key(user["pubkey"])
     signature = bytes.fromhex(params.getfirst("signature"))
-    pkcs1_15.new(public_key).verify(h, signature)
+    try:
+      pkcs1_15.new(public_key).verify(h, signature)
+    except ValueError as e:
+      output({"error": "Challenge signing failed.",
+              "ValueError": str(e)})
+      return
     token = str(uuid.uuid4())
     cursor.execute("UPDATE users SET challenge = NULL, token = ? WHERE rowid = ?", (token, userrow))
     conn.commit()
