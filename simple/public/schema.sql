@@ -1,5 +1,7 @@
 CREATE TABLE users (
        pubkey TEXT,
        challenge TEXT,
-       token TEXT
+       token TEXT,
+
+       username TEXT
 );

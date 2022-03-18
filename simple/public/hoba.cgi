@@ -7,7 +7,9 @@ import base64
 from Crypto.Signature import pkcs1_15
 from Crypto.Hash import SHA256
 from Crypto.PublicKey import RSA
+from http import cookies
 import json
+import os
 import sys
 import traceback
 import uuid
@@ -51,7 +53,18 @@ def api(params):
     conn.commit()
     output({"token": token})
 
-  
+  elif a == "retrieve":
+    C = cookies.SimpleCookie(os.getenv("HTTP_COOKIE"))
+    if "token" in C:
+      user = hoba.get_user(values.DB, C["user"].value, C["token"].value)
+      if user:
+        output(dict(user))
+        return
+      else:
+        output({"unauthorized": "Not logged in", "user": C["user"].value, "token": C["token"].value}, 403)
+    else:
+      output({"unauthorized": "Not logged in", "user": C["user"].value}, 403)
+
 def main():
   params = cgi.FieldStorage()
   try:
