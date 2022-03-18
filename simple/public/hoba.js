@@ -124,9 +124,14 @@ class Hoba {
 	const form = new FormData();
 	form.set("pubkey", public_key);
 	const body = await this.api_call("hoba.cgi?action=create", form, "id");
+	if (!body) {
+	    console.error("Failed to create new user.");
+	    return;
+	}
 	localStorage.setItem(this.STORAGE + this.S.USER, body["id"])
 	this.set_cookie("user", body["id"]);
 	console.log("User created");
+	this.login();
     }
 
     async sign_challenge(challenge) {
