@@ -3,7 +3,8 @@ const S = {
     UUID: "uuid",
     PRIVKEY: "priv_key",
     PUBKEY: "pub_key",
-    USER: "user"
+    USER: "user",
+    AUTO: "auto",
 }
 
 const KEY_ALG = {
@@ -105,6 +106,8 @@ async function login() {
 	return;
     }
 
+    localStorage.setItem(STORAGE + S.AUTO, "true");
+
     const user_id = localStorage.getItem(STORAGE + S.USER);
     
     const challenge_form = new FormData();
@@ -122,6 +125,9 @@ async function login() {
 }
 
 function auto_login() {
+    if (localStorage.getItem(STORAGE + S.AUTO) == "false") {
+	return;
+    }
     if (localStorage.getItem(STORAGE + S.PRIVKEY)) {
 	login();
     }
@@ -129,6 +135,11 @@ function auto_login() {
 
 function create() {
     create_user();
+}
+
+function logout() {
+    document.cookie = "token=; Max-Age=0";
+    localStorage.setItem(STORAGE + S.AUTO, "false");
 }
 
 function init() {
