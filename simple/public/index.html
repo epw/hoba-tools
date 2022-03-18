@@ -7,22 +7,24 @@
     <script src="script.js" async defer></script>
   </head>
   <body>
-    <h1>HOBA-inspired Accounts</h1>
-    <div>
-      <p>
-	<button type="button" onclick="create()">Create Account</button>
-      </p>
-      <p>
-	<button type="button" onclick="login()">Login</button>
-      </p>
-      <p>
-	<button type="button" onclick="logout()">Logout</button>
-      </p>
-    </div>
+    <h1>Authenticated WebApp</h1>
+    <p>
+      This is a page that uses primarily client-side code, plus authenticated API calls.
+    </p>
+    <p>
+      <strong>User:</strong> <span id="user"></span></strong>
+    </p>
+    <p>
+      <button type="button" onclick="change_name()">Change Name</button>
+    </p>
     <div>
       <p>
 	<a href="locked.cgi">Locked page</a>
       </p>
     </div>
+
+    <footer>
+      <button type="button" onclick="HOBA.logout()">Logout</button>
+    </footer>
   </body>
 </html>

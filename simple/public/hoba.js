@@ -1,6 +1,22 @@
+// While this is outside of the HOBA namespace, it's a lot more convenient to have
+// the template HTML at the top of the file.
+const HOBA_UI = `
+<dialog id="hoba">
+ <p>
+  <button type="button" onclick="HOBA.create()">Create Account</button>
+ </p>
+ <p>
+  <button type="button" onclick="HOBA.login()">Login</button>
+ </p>
+ <p>
+  <button type="button" onclick="HOBA.logout()">Logout</button>
+ </p>
+</dialog>
+`;
+
 // Class is used to create a namespace but keep all the functions available.
 class Hoba {
-    // Constructor sets constants
+    // Constructor sets constants, and attaches dialog element to document.
     constructor() {
 	// Give localStorage its own "namespace" to stay separate from other scripts on the same server.
 	this.STORAGE = ".hoba.";
@@ -28,8 +44,19 @@ class Hoba {
 	this.encoding = "UTF-8";
 	this.decoder = new TextDecoder(this.encoding);
 	this.encoder = new TextEncoder(this.encoding);
+
+	document.addEventListener("DOMContentLoaded", () => this.loaded());
     }
 
+    attach_ui() {
+	document.body.insertAdjacentHTML("beforeend", HOBA_UI);
+    }
+    
+    loaded() {
+	this.attach_ui();
+	this.auto_login();
+    }
+    
     // Cookie management
     get_cookies() {
 	const cookies = {};
@@ -85,7 +112,7 @@ class Hoba {
 
     // PRIMARY USER MANAGEMENT
 
-    async create_user() {
+    async create() {
 	console.log("Creating user");
 	const keypair = await crypto.subtle.generateKey(this.KEY_ALG, true, ["sign", "verify"]);
 	const private_key = await crypto.subtle.exportKey(this.PRIV_KEY_EXPORT_FORMAT, keypair.privateKey);
@@ -132,18 +159,15 @@ class Hoba {
 	signature_form.set("user", localStorage.getItem(this.STORAGE + this.S.USER));
 	signature_form.set("signature", signature);
 	const token = await this.api_call("hoba.cgi?action=token", signature_form, "token");
+	if (!token) {
+	    console.error("Failed to log in.");
+	    return false;
+	}
 	this.set_cookie("user", user_id);
 	this.set_cookie("token", token.token);
 	console.log("Token established.");
-    }
-
-    auto_login() {
-	if (localStorage.getItem(this.STORAGE + this.S.AUTO) == "false") {
-	    return;
-	}
-	if (localStorage.getItem(this.STORAGE + this.S.PRIVKEY)) {
-	    this.login();
-	}
+	document.getElementById("hoba").close();
+	return true;
     }
 
     logout() {
@@ -151,6 +175,24 @@ class Hoba {
 	localStorage.setItem(this.STORAGE + this.S.AUTO, "false");
     }
 
+    present_ui() {
+	document.getElementById("hoba").showModal();
+    }
+    
+    async auto_login() {
+	if (localStorage.getItem(this.STORAGE + this.S.AUTO) == "false") {
+	    this.present_ui();
+	    return;
+	}
+	if (localStorage.getItem(this.STORAGE + this.S.PRIVKEY)) {
+	    if (!await this.login()) {
+		this.present_ui();
+	    }
+	}
+    }
+
+    // Standard interface for scripts wanting to hook into authentication.
+    
     get_user() {
 	return this.api_call("hoba.cgi?action=retrieve", null, "pubkey");
     }
