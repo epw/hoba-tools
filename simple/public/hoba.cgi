@@ -1,14 +1,22 @@
 #! /usr/bin/env python3
 
 import cgi, cgitb
+cgitb.enable()
+
 import json
 import sys
 
+def output(data, status=200):
+  if status != 200:
+    print("Status:", status)
+  print("Content-Type: application/json")
+  print()
+  json.dump(data, sys.stdout)
+
 def api(params):
-  json.dump("Hello, world", sys.stdout)
+  output(True)
   
 def main():
-  print("Content-Type: application/json\n")
   params = cgi.FieldStorage()
   api(params)
 
