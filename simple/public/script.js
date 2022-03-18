@@ -112,7 +112,8 @@ async function login() {
     signature_form.set("signature", signature);
     const token = await api_call("hoba.cgi?action=token", signature_form, "token");
     set_cookie("user", user_id);
-    set_cookie("token", token);
+    set_cookie("token", token.token);
+    console.log("Token established.");
 }
 
 function create() {

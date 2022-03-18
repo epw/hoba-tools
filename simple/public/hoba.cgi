@@ -3,6 +3,10 @@
 import cgi, cgitb
 cgitb.enable()
 
+import base64
+from Crypto.Signature import pkcs1_15
+from Crypto.Hash import SHA256
+from Crypto.PublicKey import RSA
 import json
 import sys
 import traceback
@@ -22,15 +26,27 @@ def api(params):
   cursor = conn.cursor()
   
   a = params.getfirst("action")
+  userrow = params.getfirst("user")
   if a == "create":
     cursor.execute("INSERT INTO users (pubkey) VALUES (?)", (params.getfirst("pubkey"),))
     conn.commit()
     output({"id": cursor.lastrowid})
-  if a == "challenge":
+  elif a == "challenge":
     challenge = str(uuid.uuid4())
-    cursor.execute("UPDATE users SET token = ? WHERE rowid = ?", (challenge, params.getfirst("user")))
+    cursor.execute("UPDATE users SET challenge = ? WHERE rowid = ?", (challenge, userrow))
     conn.commit()
     output({"challenge": challenge})
+  elif a == "token":
+    user = db.select_one(cursor, "SELECT pubkey, challenge FROM users WHERE rowid = ?", (userrow))
+    h = SHA256.new(user["challenge"].encode("utf8"))
+    public_key = RSA.import_key(user["pubkey"])
+    signature = bytes.fromhex(params.getfirst("signature"))
+    pkcs1_15.new(public_key).verify(h, signature)
+    token = str(uuid.uuid4())
+    cursor.execute("UPDATE users SET challenge = NULL, token = ? WHERE rowid = ?", (token, userrow))
+    conn.commit()
+    output({"token": token})
+
   
 def main():
   params = cgi.FieldStorage()
