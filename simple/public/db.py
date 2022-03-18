@@ -17,7 +17,7 @@ def connect():
 
   return conn
 
-def select_one(cursor, statement, *args):
+def select(cursor, statement, *args):
   cursor.execute(statement, *args)
   return cursor.fetchone()
 

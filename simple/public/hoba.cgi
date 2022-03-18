@@ -37,7 +37,7 @@ def api(params):
     conn.commit()
     output({"challenge": challenge})
   elif a == "token":
-    user = db.select_one(cursor, "SELECT pubkey, challenge FROM users WHERE rowid = ?", (userrow))
+    user = db.select(cursor, "SELECT pubkey, challenge FROM users WHERE rowid = ?", (userrow))
     h = SHA256.new(user["challenge"].encode("utf8"))
     public_key = RSA.import_key(user["pubkey"])
     signature = bytes.fromhex(params.getfirst("signature"))
