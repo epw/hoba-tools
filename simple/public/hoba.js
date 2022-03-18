@@ -92,7 +92,7 @@ class Hoba {
 	const priv_buf = new Uint8Array(private_key);
 	localStorage.setItem(this.STORAGE + this.S.PRIVKEY, priv_buf);
 
-	const public_key = await get_pem(keypair.publicKey);
+	const public_key = await this.get_pem(keypair.publicKey);
 	localStorage.setItem(this.STORAGE + this.S.PUBKEY, public_key);
 	const form = new FormData();
 	form.set("pubkey", public_key);
@@ -144,6 +144,11 @@ class Hoba {
 	if (localStorage.getItem(this.STORAGE + this.S.PRIVKEY)) {
 	    this.login();
 	}
+    }
+
+    logout() {
+	this.clear_cookie("token");
+	localStorage.setItem(this.STORAGE + this.S.AUTO, "false");
     }
 
     get_user() {
