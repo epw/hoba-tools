@@ -33,7 +33,7 @@ function get_cookies() {
 
 function get_cookie(name) {
     for (let cookie of document.cookie.split(";")) {
-	if (cookie.startsWith(name + "=")) {
+	if (cookie.trim().startsWith(name + "=")) {
 	    return cookie.split("=")[1];
 	}
     }
@@ -116,10 +116,17 @@ async function login() {
     console.log("Token established.");
 }
 
+function auto_login() {
+    if (localStorage.getItem(STORAGE + S.PRIVKEY)) {
+	login();
+    }
+}
+
 function create() {
     create_user();
 }
 
 function init() {
+    auto_login();
 }
 init();
