@@ -12,7 +12,8 @@ import sys
 import traceback
 import uuid
 
-import db
+import hoba
+import values
 
 def output(data, status=200):
   if status != 200:
@@ -22,7 +23,7 @@ def output(data, status=200):
   json.dump(data, sys.stdout)
 
 def api(params):
-  conn = db.connect()
+  conn = hoba.connect(values.DB)
   cursor = conn.cursor()
   
   a = params.getfirst("action")
@@ -37,7 +38,10 @@ def api(params):
     conn.commit()
     output({"challenge": challenge})
   elif a == "token":
-    user = db.select(cursor, "SELECT pubkey, challenge FROM users WHERE rowid = ?", (userrow))
+    user = hoba.select(cursor, "SELECT pubkey, challenge FROM users WHERE rowid = ?", (userrow))
+    if not user:
+      output({"error": "No user found for ID {}".format(userrow)}, 404)
+      return
     h = SHA256.new(user["challenge"].encode("utf8"))
     public_key = RSA.import_key(user["pubkey"])
     signature = bytes.fromhex(params.getfirst("signature"))

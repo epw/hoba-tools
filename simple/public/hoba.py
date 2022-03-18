@@ -1,14 +1,12 @@
 import os
 import sqlite3
 
-import values
-
-def connect():
+def connect(db):
   needs_init = False
-  if not os.path.exists(values.DB):
+  if not os.path.exists(db):
     needs_init = True
 
-  conn = sqlite3.connect(values.DB)
+  conn = sqlite3.connect(db)
   conn.row_factory = sqlite3.Row
   if needs_init:
     cursor = conn.cursor()
@@ -24,3 +22,11 @@ def select(cursor, statement, *args):
 def select_all(cursor, statement, *args):
   cursor.execute(statement, *args)
   return cursor.fetchall()
+
+def get_user(db, userid, token):
+  conn = connect(db)
+  cursor = conn.cursor()
+  row = select(cursor, "SELECT * FROM users WHERE rowid = ?", (userid,))
+  if row and row["token"] == token:
+    return row
+  return None
