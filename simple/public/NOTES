@@ -1,0 +1,9 @@
+For this one, I'm trying not to do as much that's fancy.
+
+Only one page can deal with logging in: index.html (probably)
+
+There's no Apache-level configuration, just a Python function that can check a cookie with a user ID and a token. The function either returns the user data, or redirects to the login page.
+
+This means that being logged in actually means having an up-to-date token cookie, and only CGI-enabled pages can be gated behind a login.
+
+The login page itself handles creating keypairs, requesting a new user from the server, and negotiates a token cookie with the server.
