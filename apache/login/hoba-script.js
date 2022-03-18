@@ -27,10 +27,6 @@ async function get_pem(public_key) {
     return "-----BEGIN PUBLIC KEY-----\r\n" + body.match(/.{1,64}/g).join("\r\n") + "\r\n-----END PUBLIC KEY-----";
 };
 
-async function login() {
-    console.error("Unimplemented");
-}
-
 async function create_user() {
     console.log("Creating user");
     const keypair = await crypto.subtle.generateKey(KEY_ALG, true, ["sign", "verify"]);
@@ -56,7 +52,7 @@ async function create_user() {
 	console.error(body);
     }
     console.log("User created");
-//    init();
+    init();
 }
 
 function buf2hex(buf) {
@@ -98,7 +94,7 @@ async function sign_challenge(keydata) {
     document.getElementById("pubkey").value = localStorage.getItem(STORAGE + S.PUBKEY);
     document.getElementById("token").value = token_json.token;
     console.log("Token saved:", token_json.token);
-    //document.getElementById("login").submit();
+    document.getElementById("login").submit();
 }
 
 

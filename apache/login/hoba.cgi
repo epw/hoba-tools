@@ -59,7 +59,7 @@ def api(action, pubkey=None, signature=None):
       pkcs1_15.new(public_key).verify(h, signature)
       token = str(uuid.uuid4())
       cursor.execute("UPDATE pubkeys SET challenge = NULL, token = ? WHERE keydata = ?", (htpasswd(token), pubkey))
-      C["sessiondbd"] = token
+#      C["sessiondbd"] = token
       json_output(C, {"token": token})
     except (ValueError, TypeError) as e:
       tb = traceback.format_exc()
