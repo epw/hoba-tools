@@ -45,6 +45,7 @@ async function create_user() {
     if (res.status != 200) {
 	console.error("Error " + res.status);
 	console.error(await res.text());
+	return;
     }
     const body = await res.json();
     if (body != true) {
@@ -52,7 +53,6 @@ async function create_user() {
 	console.error(body);
     }
     console.log("User created");
-    init();
 }
 
 function create() {
