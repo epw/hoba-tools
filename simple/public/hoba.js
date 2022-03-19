@@ -32,7 +32,8 @@ class Hoba {
 
 	// Events other scripts can listen for on <body>
 	this.EVENTS = {
-	    LOGIN: "LOGIN"
+	    LOGIN: "LOGIN",
+	    LOGOUT: "LOGOUT",
 	};
 
 	this.KEY_ALG = {
@@ -154,6 +155,9 @@ class Hoba {
     send_login_event() {
 	document.dispatchEvent(new Event(this.EVENTS.LOGIN));
     }
+    send_logout_event() {
+	document.dispatchEvent(new Event(this.EVENTS.LOGOUT));
+    }
 
     async get_user() {
 	this.user = await this.api_call("hoba.cgi?action=retrieve", null);
@@ -196,6 +200,7 @@ class Hoba {
     logout() {
 	this.clear_cookie("token");
 	localStorage.setItem(this.STORAGE + this.S.AUTO, "false");
+	this.send_logout_event();
     }
 
     present_ui() {

@@ -9,6 +9,11 @@ async function change_name() {
     document.getElementById("user").textContent = new_name.name;
 }
 
+function logout() {
+    document.getElementById("user").textContent = "";
+    HOBA.present_ui();
+}
+
 async function app() {
     if (HOBA.user != null) {
 	document.getElementById("user").textContent = HOBA.user.name;
@@ -17,5 +22,6 @@ async function app() {
 
 function init() {
     document.addEventListener(HOBA.EVENTS.LOGIN, app);
+    document.addEventListener(HOBA.EVENTS.LOGOUT, logout);
 }
 init();
