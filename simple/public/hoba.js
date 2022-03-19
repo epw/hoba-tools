@@ -208,18 +208,18 @@ class Hoba {
     }
     
     async auto_login() {
-	if (localStorage.getItem(this.STORAGE + this.S.AUTO) == "false") {
+	if (!localStorage.getItem(this.STORAGE + this.S.PRIVKEY)
+	    || localStorage.getItem(this.STORAGE + this.S.AUTO) == "false") {
 	    this.present_ui();
 	    return;
 	}
-	if (localStorage.getItem(this.STORAGE + this.S.PRIVKEY)) {
-	    await this.get_user();
-	    if (this.user) {
-		this.send_login_event();
-	    } else {
-		if (!await this.login()) {
-		    this.present_ui();
-		}
+
+	await this.get_user();
+	if (this.user) {
+	    this.send_login_event();
+	} else {
+	    if (!await this.login()) {
+		this.present_ui();
 	    }
 	}
     }
