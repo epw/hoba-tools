@@ -14,15 +14,29 @@ const HOBA_UI = `
 #hoba-sharing.show {
   display: unset;
 }
+#hoba-identifier-code, #hoba-identifier-code-binding {
+  text-align: center;
+  font-size: 200%;
+  font-weight: bold;
+}
+#hoba-qr {
+  text-align: center;
+}
 #hoba-manage .hoba-destroy {
   color: red;
 }
 </style>
 
 <dialog id="hoba">
- <p class="hoba-bind">
-   <button type="button" onclick="HOBA.bind()">Bind account to this browser</button>
- </p>
+ <div class="hoba-bind">
+   <div class="hoba-identifier">
+    <div><strong>The brower that generated this link had the code:</strong></div>
+    <div id="hoba-identifier-code-binding"></div>
+   </div>
+   <p>
+    <button type="button" onclick="HOBA.bind()">Bind account to this browser</button>
+   </p>
+ </div>
  <p>
   <button type="button" onclick="HOBA.create()">Create Account</button>
  </p>
@@ -43,6 +57,10 @@ const HOBA_UI = `
    <button type="button" onclick="HOBA.generate_share()">Link to Log In Elsewhere</button>
   </p>
   <div id="hoba-sharing">
+   <div class="hoba-identifier">
+     <div><strong>The other brower will also show this temporary code:</strong></div>
+     <div id="hoba-identifier-code"></div>
+   </div>
    <div><div id="hoba-qr"></div></div>
    <div><span>Link to share:</span> <input type="text" id="hoba-share-link" readonly>
         <button type="button" id="hoba-copy-button" onclick="HOBA.copy_link()">Copy</button></div>
@@ -115,6 +133,7 @@ class Hoba {
 	const url_params = new URLSearchParams(location.search);
 	if (url_params.get("secret")) {
 	    document.querySelector("#hoba .hoba-bind").classList.add("show");
+	    document.getElementById("hoba-identifier-code-binding").textContent = url_params.get("original_identifier");
 	}
     }
     
@@ -325,6 +344,14 @@ WARNING: If you do not have another browser logged in, you won't be able to reco
 	this.dialog.showModal();
     }
 
+    friendly_identifier() {
+	const identifier = [];
+	for (let i = 0; i < 5; i++) {
+	    identifier.push(Math.floor(Math.random() * 10));
+	}
+	return identifier.join("");
+    }
+    
     async generate_share() {
 	document.querySelector("#hoba-sharing").classList.add("show");
 	
@@ -333,11 +360,15 @@ WARNING: If you do not have another browser logged in, you won't be able to reco
 	const params = new URLSearchParams();
 	params.set("action", "confirm_bind");
 	params.set("user", this.get_cookie("user"));
-	params.set("redirect", location);
+	params.set("redirect", location);	
+	const identifier = this.friendly_identifier()
+	params.set("original_identifier", identifier);
 	const secret = await this.api_call("hoba.cgi?action=browser_secret", null, "secret");
 	params.set("secret", secret.secret);
 	url.search = params;
 	field.value = url;
+
+	document.getElementById("hoba-identifier-code").textContent = identifier;
 
 	const qr = qrcode(0, "L");
 	qr.addData(url.toString());

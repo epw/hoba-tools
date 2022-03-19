@@ -7,7 +7,7 @@ import base64
 from Crypto.Signature import pkcs1_15
 from Crypto.Hash import SHA256
 from Crypto.PublicKey import RSA
-from datetime import datetime
+from datetime import datetime, timedelta
 import hashlib
 from http import cookies
 import json
@@ -90,7 +90,9 @@ def api(params):
       hoba.output({"unauthorized": "Not logged in", "user": C["user"].value, "token": C["token"].value}, 403)
       return
     secret = generate_secret()
-    cursor.execute("UPDATE users SET new_browser_secret = ? WHERE rowid = ?", (secret, user["rowid"]))
+    expiry = datetime.now() + timedelta(days=1)
+    cursor.execute("UPDATE users SET new_browser_secret = ?, new_browser_secret_expiry = ?, old_browser_identifier = ? WHERE rowid = ?",
+                   (secret, expiry, params.getfirst("origin_identifier"), user["rowid"]))
     conn.commit()
     hoba.output({"secret": secret});
   elif a == "confirm_bind":

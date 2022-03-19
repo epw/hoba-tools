@@ -31,7 +31,9 @@ MVP TODO
       - Warn you need to get the email right, whoever gets this will be able to log in as you forever!
 - Switch from localStorage to indexeddb for (at least) private key
 - Easy interface to attach "login management" button to any page
+- Good user feedback when things go wrong
 - Test by copying essential files (should just be three) to a new project directory, maybe on a new computer
+- Write documentation explaining hoba.cgi state machine
 
 MVP done
 - Update schema so users have multiple public keys

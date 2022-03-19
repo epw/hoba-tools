@@ -1,6 +1,8 @@
 CREATE TABLE users (
        data TEXT,
        new_browser_secret TEXT,
+       new_browser_secret_expiry INT,
+       old_browser_identifier TEXT
 );
 
 CREATE TABLE keys (
