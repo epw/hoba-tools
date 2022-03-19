@@ -24,7 +24,6 @@ class Hoba {
 	this.STORAGE = ".hoba.";
 	// Assign constants so keys can be program-recognized, not just strings
 	this.S = {
-	    UUID: "uuid",
 	    PRIVKEY: "priv_key",
 	    PUBKEY: "pub_key",
 	    USER: "user",

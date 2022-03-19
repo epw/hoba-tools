@@ -7,16 +7,23 @@ import base64
 from Crypto.Signature import pkcs1_15
 from Crypto.Hash import SHA256
 from Crypto.PublicKey import RSA
+from datetime import datetime
+import hashlib
 from http import cookies
 import json
 import os
+import random
 import sys
 import traceback
-import uuid
 
 import hoba
 import values
 
+def generate_secret():
+  buf = []
+  for _ in range(16):
+    buf.append(chr(random.randint(0, 128)))
+  return hashlib.sha256(bytes(datetime.isoformat(datetime.now()) + "".join(buf), "utf8")).hexdigest()
 
 def api(params):
   conn = hoba.connect(values.DB)
@@ -31,7 +38,7 @@ def api(params):
     conn.commit()
     hoba.output({"id": userid})
   elif a == "challenge":
-    challenge = str(uuid.uuid4())
+    challenge = generate_secret()
     cursor.execute("UPDATE keys SET challenge = ? WHERE pubkey = ?", (challenge, params.getfirst("pubkey")))
     conn.commit()
     hoba.output({"challenge": challenge})
@@ -50,7 +57,7 @@ def api(params):
       hoba.output({"error": "Challenge signing failed.",
               "ValueError": str(e)})
       return
-    token = str(uuid.uuid4())
+    token = generate_secret()
     cursor.execute("UPDATE keys SET challenge = NULL, token = ? WHERE rowid = ?", (token, key_row))
     conn.commit()
     hoba.output({"token": token})
