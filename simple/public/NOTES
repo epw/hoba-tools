@@ -28,11 +28,10 @@ MVP TODO
 - "Manage account" dialog
   - should also offer "destroy credentials"
   - Offer login link as:
-    - QR code
-    - share API (like Wordle)
     - blank for email to send to (also save email with account)
       - Warn you need to get the email right, whoever gets this will be able to log in as you forever!
 - Switch from localStorage to indexeddb for (at least) private key
+- Easy interface to attach "login management" button to any page
 - Test by copying essential files (should just be three) to a new project directory, maybe on a new computer
 
 MVP done
@@ -45,11 +44,7 @@ MVP done
   - Just like creating account, but verifies secret matches for user row, then creates new pubkey for user and returns original user
 - Make "link account":
   - A second <dialog> in hoba.js, this one offers logout and "make a link to login elsewhere"
-    - Also should offer "destroy credentials"
   - Offers login link as:
     - link
     - QR code
     - share API (like Wordle)
-    - blank for email to send to (also save email with account)
-      - Warn you need to get the email right, whoever gets this will be able to log in as you forever!
-  - Easy interface to attach "login management" button to any page

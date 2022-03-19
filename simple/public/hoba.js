@@ -3,6 +3,16 @@
 const HOBA_UI = `
 <style>
 #hoba .hoba-bind {
+  display: none;
+}
+#hoba .hoba-bind.show {
+  display: unset;
+}
+#hoba-sharing {
+  display: none;
+}
+#hoba-sharing.show {
+  display: unset;
 }
 </style>
 
@@ -20,7 +30,7 @@ const HOBA_UI = `
   <button type="button" onclick="HOBA.logout()">Logout</button>
  </p>
  <p>
-  <button type="button" onclick="HOBA.dialog.close()">Close</button>
+  <button type="button" onclick="HOBA.close_dialog()">Close</button>
  </p>
 </dialog>
 
@@ -29,15 +39,18 @@ const HOBA_UI = `
   <p>
    <button type="button" onclick="HOBA.generate_share()">Link to Log In Elsewhere</button>
   </p>
-  <p>
-    <a id="hoba-share-link"></a>
-  </p>
+  <div id="hoba-sharing">
+   <div><div id="hoba-qr"></div></div>
+   <div><span>Link to share:</span> <input type="text" id="hoba-share-link" readonly>
+        <button type="button" id="hoba-copy-button" onclick="HOBA.copy_link()">Copy</button></div>
+   <div><button type="button" onclick="HOBA.share_link()">Share</button></div>
+  </div>
  </p>
  <p>
   <button type="button" onclick="HOBA.logout()">Logout</button>
  </p>
  <p>
-  <button type="button" onclick="HOBA.dialog.close()">Close</button>
+  <button type="button" onclick="HOBA.close_dialog()">Close</button>
  </p>
 </dialog>
 `;
@@ -86,7 +99,17 @@ class Hoba {
     }
 
     attach_ui() {
+	const script = document.createElement("script");
+	script.setAttribute("async", "async");
+	script.setAttribute("defer", "defer");
+	script.src = "https://cdnjs.cloudflare.com/ajax/libs/qrcode-generator/1.4.4/qrcode.min.js";
+	document.body.append(script);
+
 	document.body.insertAdjacentHTML("beforeend", HOBA_UI);
+	const url_params = new URLSearchParams(location.search);
+	if (url_params.get("secret")) {
+	    document.querySelector("#hoba .hoba-bind").classList.add("show");
+	}
     }
     
     loaded() {
@@ -265,16 +288,25 @@ class Hoba {
     logout() {
 	this.clear_cookie("token");
 	localStorage.setItem(this.STORAGE + this.S.AUTO, "false");
+	this.close_dialog();
 	this.send_logout_event();
     }
 
+    close_dialog() {
+	if (this.dialog) {
+	    this.dialog.close();
+	}
+    }
+    
     present_ui() {
 	this.dialog = document.getElementById("hoba");
 	this.dialog.showModal();
     }
 
     async generate_share() {
-	const a = document.getElementById("hoba-share-link");
+	document.querySelector("#hoba-sharing").classList.add("show");
+	
+	const field = document.getElementById("hoba-share-link");
 	const url = new URL("hoba.cgi", location);
 	const params = new URLSearchParams();
 	params.set("action", "confirm_bind");
@@ -283,8 +315,32 @@ class Hoba {
 	const secret = await this.api_call("hoba.cgi?action=browser_secret", null, "secret");
 	params.set("secret", secret.secret);
 	url.search = params;
-	a.href = url;
-	a.textContent = url;
+	field.value = url;
+
+	const qr = qrcode(0, "L");
+	qr.addData(url.toString());
+	qr.make();
+	document.getElementById("hoba-qr").innerHTML = qr.createImgTag(5);
+    }
+
+    copy_link() {
+	navigator.clipboard.writeText(document.getElementById("hoba-share-link").value);
+	const copy_button = document.getElementById("hoba-copy-button");
+	copy_button.disabled = true;
+	const original_text = copy_button.textContent;
+	copy_button.textContent = "Copied";
+	setTimeout(() => {
+	    copy_button.textContent = original_text;
+	    copy_button.disabled = false;
+	}, 1000);
+    }
+
+    share_link() {
+	if ("share" in navigator) {
+	    navigator.share({url: document.getElementById("hoba-share-link").value});
+	} else {
+	    this.copy_link();
+	}
     }
     
     manage() {
