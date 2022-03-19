@@ -253,6 +253,12 @@ class Hoba {
 	document.getElementById("hoba").close();
 	await this.get_user();
 	this.send_login_event();
+
+	const url_params = new URLSearchParams(location.search);
+	if (url_params.get("redirect")) {
+	    location = url_params.get("redirect");
+	}
+
 	return true;
     }
 
@@ -273,6 +279,7 @@ class Hoba {
 	const params = new URLSearchParams();
 	params.set("action", "confirm_bind");
 	params.set("user", this.get_cookie("user"));
+	params.set("redirect", location);
 	const secret = await this.api_call("hoba.cgi?action=browser_secret", null, "secret");
 	params.set("secret", secret.secret);
 	url.search = params;
