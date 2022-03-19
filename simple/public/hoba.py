@@ -29,9 +29,10 @@ def get_user(db, userid, token):
   conn = connect(db)
   cursor = conn.cursor()
   user = select(cursor, "SELECT rowid, data FROM users WHERE rowid = ?", (userid,))
-  row = select(cursor, "SELECT token FROM keys WHERE userid = ?", (userid,))
-  if row and row["token"] == token:
-    return user
+  rows = select_all(cursor, "SELECT token FROM keys WHERE userid = ?", (userid,))
+  for row in rows:
+    if row and row["token"] == token:
+      return user
   return None
 
 # Convenience function for JSON CGI output. Also helpful for other scripts that use the same structure.

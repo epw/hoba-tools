@@ -230,9 +230,9 @@ class Hoba {
 	challenge_form.set("pubkey", localStorage.getItem(this.STORAGE + this.S.PUBKEY));
 	const challenge = await this.api_call("hoba.cgi?action=challenge", challenge_form, "challenge");
 	const signature = await this.sign_challenge(challenge["challenge"]);
-
 	const signature_form = new FormData();
 	signature_form.set("user", localStorage.getItem(this.STORAGE + this.S.USER));
+	signature_form.set("pubkey", localStorage.getItem(this.STORAGE + this.S.PUBKEY));
 	signature_form.set("signature", signature);
 	const token = await this.api_call("hoba.cgi?action=token", signature_form, "token");
 	if (!token) {
@@ -262,7 +262,7 @@ class Hoba {
 	const a = document.getElementById("hoba-share-link");
 	const url = new URL("hoba.cgi", location);
 	const params = new URLSearchParams();
-	params.set("action", "bind");
+	params.set("action", "confirm_bind");
 	params.set("user", this.get_cookie("user"));
 	const secret = await this.api_call("hoba.cgi?action=browser_secret", null, "secret");
 	params.set("secret", secret.secret);

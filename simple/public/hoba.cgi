@@ -21,6 +21,22 @@ import values
 
 C = cookies.SimpleCookie(os.getenv("HTTP_COOKIE"))
 
+def confirm_bind_output():
+  print("""Content-Type: text/html
+
+<html>
+<head>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="stylesheet" href="style.css">
+<script src="hoba.js"></script>
+</head>
+<body>
+Presenting login options...
+</body>
+</html>
+""")
+
+
 def generate_secret():
   buf = []
   for _ in range(16):
@@ -49,7 +65,7 @@ def api(params):
     conn.commit()
     hoba.output({"challenge": challenge})
   elif a == "token":
-    challenge_key = hoba.select(cursor, "SELECT rowid, pubkey, challenge FROM keys WHERE userid = ?", userrow)
+    challenge_key = hoba.select(cursor, "SELECT rowid, pubkey, challenge FROM keys WHERE pubkey = ?", (params.getfirst("pubkey"),))
     if not challenge_key:
       hoba.output({"error": "No user found for ID {}".format(userrow)}, 404)
       return
@@ -77,6 +93,16 @@ def api(params):
     cursor.execute("UPDATE users SET new_browser_secret = ? WHERE rowid = ?", (secret, user["rowid"]))
     conn.commit()
     hoba.output({"secret": secret});
+  elif a == "confirm_bind":
+    userid = params.getfirst("user")
+    user = hoba.select(cursor, "SELECT new_browser_secret FROM users WHERE rowid = ?", (userid,))
+    if not user:
+      hoba.output({"not found": "User not found", "user": userid}, 404)
+      return
+    if user["new_browser_secret"] != params.getfirst("secret"):
+      hoba.output({"unauthorized": "Incorrect browser secret.", "user": userid, "secret": params.getfirst("secret")}, 403)
+      return
+    confirm_bind_output()
   elif a == "bind":
     userid = params.getfirst("user")
     user = hoba.select(cursor, "SELECT new_browser_secret FROM users WHERE rowid = ?", (userid,))
