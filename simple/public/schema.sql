@@ -1,5 +1,6 @@
 CREATE TABLE users (
-       data TEXT
+       data TEXT,
+       new_browser_secret TEXT,
 );
 
 CREATE TABLE keys (

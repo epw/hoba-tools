@@ -28,7 +28,7 @@ def select_all(cursor, statement, *args):
 def get_user(db, userid, token):
   conn = connect(db)
   cursor = conn.cursor()
-  user = select(cursor, "SELECT * FROM users WHERE rowid = ?", (userid,))
+  user = select(cursor, "SELECT data FROM users WHERE rowid = ?", (userid,))
   row = select(cursor, "SELECT token FROM keys WHERE userid = ?", (userid,))
   if row and row["token"] == token:
     return user

@@ -25,6 +25,11 @@ def generate_secret():
     buf.append(chr(random.randint(0, 128)))
   return hashlib.sha256(bytes(datetime.isoformat(datetime.now()) + "".join(buf), "utf8")).hexdigest()
 
+def save_pubkey(conn, userid, pubkey):
+  cursor = conn.cursor()
+  cursor.execute("INSERT INTO keys (userid, pubkey) VALUES (?, ?)", (userid, pubkey))
+  conn.commit()
+  
 def api(params):
   conn = hoba.connect(values.DB)
   cursor = conn.cursor()
@@ -34,8 +39,7 @@ def api(params):
   if a == "create":
     cursor.execute("INSERT INTO users (data) VALUES (\"null\")")
     userid = cursor.lastrowid
-    cursor.execute("INSERT INTO keys (userid, pubkey) VALUES (?, ?)", (userid, params.getfirst("pubkey"),))
-    conn.commit()
+    save_pubkey(conn, userid, params.getfirst("pubkey"))
     hoba.output({"id": userid})
   elif a == "challenge":
     challenge = generate_secret()
@@ -62,17 +66,30 @@ def api(params):
     conn.commit()
     hoba.output({"token": token})
 
+  elif a == "bind":
+    userid = params.getfirst("user")
+    user = hoba.select(cursor, "SELECT new_browser_secret FROM users WHERE rowid = ?", (userid,))
+    if not user:
+      hoba.output({"not found": "User not found", "user": userid}, 404)
+      return
+    if user["new_browser_secret"] != params.getfirst("secret"):
+      hoba.output({"unauthorized": "Incorrect browser secret.", "user": userid, "secret": params.getfirst("secret")}, 403)
+      return
+    save_pubkey(conn, userid, params.getfirst("pubkey"))
+    cursor.execute("UPDATE users SET new_browser_secret = NULL WHERE rowid = ?", (userid,))
+    conn.commit()
+    hoba.output({"id": userid})
+    
   elif a == "retrieve":
     C = cookies.SimpleCookie(os.getenv("HTTP_COOKIE"))
-    if "token" in C:
-      user = hoba.get_user(values.DB, C["user"].value, C["token"].value)
-      if user:
-        hoba.output(user["data"], 200, True)
-        return
-      else:
-        hoba.output({"unauthorized": "Not logged in", "user": C["user"].value, "token": C["token"].value}, 403)
-    else:
+    if "token" not in C:
       hoba.output({"unauthorized": "Not logged in", "user": C["user"].value}, 403)
+      return
+    user = hoba.get_user(values.DB, C["user"].value, C["token"].value)
+    if not user:
+      hoba.output({"unauthorized": "Not logged in", "user": C["user"].value, "token": C["token"].value}, 403)
+      return
+    hoba.output(user["data"], 200, True)
 
 def main():
   params = cgi.FieldStorage()

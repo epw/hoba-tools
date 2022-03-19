@@ -1,7 +1,14 @@
 // While this is outside of the HOBA namespace, it's a lot more convenient to have
 // the template HTML at the top of the file.
 const HOBA_UI = `
+<style>
+#hoba .hoba-bind {
+}
+</style>
 <dialog id="hoba">
+ <p class="hoba-bind">
+   <button type="button" onclick="HOBA.bind()">Bind account to this browser</button>
+ </p>
  <p>
   <button type="button" onclick="HOBA.create()">Create Account</button>
  </p>
@@ -119,8 +126,9 @@ class Hoba {
 
     // PRIMARY USER MANAGEMENT
 
-    async create() {
-	console.log("Creating user");
+    // Helper function used to actually generate keypair, used in both create() and bind(),
+    // for new and preexisting accounts respectively.
+    async new_keypair() {
 	const keypair = await crypto.subtle.generateKey(this.KEY_ALG, true, ["sign", "verify"]);
 	const private_key = await crypto.subtle.exportKey(this.PRIV_KEY_EXPORT_FORMAT, keypair.privateKey);
 	const priv_buf = new Uint8Array(private_key);
@@ -128,6 +136,13 @@ class Hoba {
 
 	const public_key = await this.get_pem(keypair.publicKey);
 	localStorage.setItem(this.STORAGE + this.S.PUBKEY, public_key);
+
+	return public_key;
+    }
+    
+    async create() {
+	console.log("Creating user");
+	const public_key = await this.new_keypair();
 	const form = new FormData();
 	form.set("pubkey", public_key);
 	const body = await this.api_call("hoba.cgi?action=create", form, "id");
@@ -141,6 +156,27 @@ class Hoba {
 	this.login();
     }
 
+    async bind() {
+	console.log("Binding to existing user");
+	const public_key = await this.new_keypair();
+
+	const url_params = new URLSearchParams(location.search);
+
+	const form = new FormData();
+	form.set("pubkey", public_key);
+	form.set("user", url_params.get("user"));
+	form.set("secret", url_params.get("secret"));
+	const body = await this.api_call("hoba.cgi?action=bind", form, "id");
+	if (!body) {
+	    console.error("Failed to bind to existing user.");
+	    return;
+	}
+	localStorage.setItem(this.STORAGE + this.S.USER, body["id"])
+	this.set_cookie("user", body["id"]);
+	console.log("User created");
+	this.login();
+    }
+    
     async sign_challenge(challenge) {
 	const private_key = await crypto.subtle.importKey(
 	    this.PRIV_KEY_EXPORT_FORMAT,
