@@ -19,6 +19,8 @@ import traceback
 import hoba
 import values
 
+C = cookies.SimpleCookie(os.getenv("HTTP_COOKIE"))
+
 def generate_secret():
   buf = []
   for _ in range(16):
@@ -66,6 +68,15 @@ def api(params):
     conn.commit()
     hoba.output({"token": token})
 
+  elif a == "browser_secret":
+    user = hoba.get_user(values.DB, C["user"].value, C["token"].value)
+    if not user:
+      hoba.output({"unauthorized": "Not logged in", "user": C["user"].value, "token": C["token"].value}, 403)
+      return
+    secret = generate_secret()
+    cursor.execute("UPDATE users SET new_browser_secret = ? WHERE rowid = ?", (secret, user["rowid"]))
+    conn.commit()
+    hoba.output({"secret": secret});
   elif a == "bind":
     userid = params.getfirst("user")
     user = hoba.select(cursor, "SELECT new_browser_secret FROM users WHERE rowid = ?", (userid,))
@@ -81,7 +92,6 @@ def api(params):
     hoba.output({"id": userid})
     
   elif a == "retrieve":
-    C = cookies.SimpleCookie(os.getenv("HTTP_COOKIE"))
     if "token" not in C:
       hoba.output({"unauthorized": "Not logged in", "user": C["user"].value}, 403)
       return

@@ -5,6 +5,7 @@ const HOBA_UI = `
 #hoba .hoba-bind {
 }
 </style>
+
 <dialog id="hoba">
  <p class="hoba-bind">
    <button type="button" onclick="HOBA.bind()">Bind account to this browser</button>
@@ -14,6 +15,20 @@ const HOBA_UI = `
  </p>
  <p>
   <button type="button" onclick="HOBA.login()">Login</button>
+ </p>
+ <p>
+  <button type="button" onclick="HOBA.logout()">Logout</button>
+ </p>
+</dialog>
+
+<dialog id="hoba-manage">
+ <p>
+  <p>
+   <button type="button" onclick="HOBA.generate_share()">Link to Log In Elsewhere</button>
+  </p>
+  <p>
+    <a id="hoba-share-link"></a>
+  </p>
  </p>
  <p>
   <button type="button" onclick="HOBA.logout()">Logout</button>
@@ -241,6 +256,23 @@ class Hoba {
 
     present_ui() {
 	document.getElementById("hoba").showModal();
+    }
+
+    async generate_share() {
+	const a = document.getElementById("hoba-share-link");
+	const url = new URL("hoba.cgi", location);
+	const params = new URLSearchParams();
+	params.set("action", "bind");
+	params.set("user", this.get_cookie("user"));
+	const secret = await this.api_call("hoba.cgi?action=browser_secret", null, "secret");
+	params.set("secret", secret.secret);
+	url.search = params;
+	a.href = url;
+	a.textContent = url;
+    }
+    
+    manage() {
+	document.getElementById("hoba-manage").showModal();
     }
     
     async auto_login() {
