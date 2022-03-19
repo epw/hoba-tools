@@ -26,7 +26,6 @@ hoba.cgi: Server side of account management and authentication. Calls out to hob
 MVP TODO
 - Binding: URL params also need to describe user in human-readable way so you know you're logging yourself in
 - "Manage account" dialog
-  - should also offer "destroy credentials"
   - Offer login link as:
     - blank for email to send to (also save email with account)
       - Warn you need to get the email right, whoever gets this will be able to log in as you forever!
@@ -48,3 +47,4 @@ MVP done
     - link
     - QR code
     - share API (like Wordle)
+- also offer "destroy credentials"

@@ -14,6 +14,9 @@ const HOBA_UI = `
 #hoba-sharing.show {
   display: unset;
 }
+#hoba-manage .hoba-destroy {
+  color: red;
+}
 </style>
 
 <dialog id="hoba">
@@ -48,6 +51,9 @@ const HOBA_UI = `
  </p>
  <p>
   <button type="button" onclick="HOBA.logout()">Logout</button>
+ </p>
+ <p>
+  <button type="button" class="hoba-destroy" onclick="HOBA.destroy()">Destroy credentials</button>
  </p>
  <p>
   <button type="button" onclick="HOBA.close_dialog()">Close</button>
@@ -290,6 +296,22 @@ class Hoba {
 	localStorage.setItem(this.STORAGE + this.S.AUTO, "false");
 	this.close_dialog();
 	this.send_logout_event();
+    }
+
+    async destroy() {
+	const confirmation = confirm(`Really destroy credentials?
+WARNING: If you do not have another browser logged in, you won't be able to recover this account!`);
+	if (!confirmation) {
+	    return;
+	}
+	this.logout();
+	for (let cookie of ["token", "user"]) {
+	    this.clear_cookie(cookie);
+	}
+	for (let field of [this.S.USER, this.S.PUBKEY, this.S.PRIVKEY, this.S.AUTO]) {
+	    console.log(this.STORAGE + field);
+	    localStorage.removeItem(this.STORAGE + field);
+	}
     }
 
     close_dialog() {
