@@ -17,12 +17,6 @@ import uuid
 import hoba
 import values
 
-def output(data, status=200):
-  if status != 200:
-    print("Status:", status)
-  print("Content-Type: application/json")
-  print()
-  json.dump(data, sys.stdout)
 
 def api(params):
   conn = hoba.connect(values.DB)
@@ -31,44 +25,47 @@ def api(params):
   a = params.getfirst("action")
   userrow = params.getfirst("user")
   if a == "create":
-    cursor.execute("INSERT INTO users (pubkey) VALUES (?)", (params.getfirst("pubkey"),))
+    cursor.execute("INSERT INTO users (data) VALUES (\"null\")")
+    userid = cursor.lastrowid
+    cursor.execute("INSERT INTO keys (userid, pubkey) VALUES (?, ?)", (userid, params.getfirst("pubkey"),))
     conn.commit()
-    output({"id": cursor.lastrowid})
+    hoba.output({"id": userid})
   elif a == "challenge":
     challenge = str(uuid.uuid4())
-    cursor.execute("UPDATE users SET challenge = ? WHERE rowid = ?", (challenge, userrow))
+    cursor.execute("UPDATE keys SET challenge = ? WHERE pubkey = ?", (challenge, params.getfirst("pubkey")))
     conn.commit()
-    output({"challenge": challenge})
+    hoba.output({"challenge": challenge})
   elif a == "token":
-    user = hoba.select(cursor, "SELECT pubkey, challenge FROM users WHERE rowid = ?", (userrow))
-    if not user:
-      output({"error": "No user found for ID {}".format(userrow)}, 404)
+    challenge_key = hoba.select(cursor, "SELECT rowid, pubkey, challenge FROM keys WHERE userid = ?", userrow)
+    if not challenge_key:
+      hoba.output({"error": "No user found for ID {}".format(userrow)}, 404)
       return
-    h = SHA256.new(user["challenge"].encode("utf8"))
-    public_key = RSA.import_key(user["pubkey"])
+    key_row = challenge_key["rowid"]
+    h = SHA256.new(challenge_key["challenge"].encode("utf8"))
+    public_key = RSA.import_key(challenge_key["pubkey"])
     signature = bytes.fromhex(params.getfirst("signature"))
     try:
       pkcs1_15.new(public_key).verify(h, signature)
     except ValueError as e:
-      output({"error": "Challenge signing failed.",
+      hoba.output({"error": "Challenge signing failed.",
               "ValueError": str(e)})
       return
     token = str(uuid.uuid4())
-    cursor.execute("UPDATE users SET challenge = NULL, token = ? WHERE rowid = ?", (token, userrow))
+    cursor.execute("UPDATE keys SET challenge = NULL, token = ? WHERE rowid = ?", (token, key_row))
     conn.commit()
-    output({"token": token})
+    hoba.output({"token": token})
 
   elif a == "retrieve":
     C = cookies.SimpleCookie(os.getenv("HTTP_COOKIE"))
     if "token" in C:
       user = hoba.get_user(values.DB, C["user"].value, C["token"].value)
       if user:
-        output(dict(user))
+        hoba.output(user["data"], 200, True)
         return
       else:
-        output({"unauthorized": "Not logged in", "user": C["user"].value, "token": C["token"].value}, 403)
+        hoba.output({"unauthorized": "Not logged in", "user": C["user"].value, "token": C["token"].value}, 403)
     else:
-      output({"unauthorized": "Not logged in", "user": C["user"].value}, 403)
+      hoba.output({"unauthorized": "Not logged in", "user": C["user"].value}, 403)
 
 def main():
   params = cgi.FieldStorage()
@@ -79,7 +76,7 @@ def main():
     for key in params.keys():
       d[key] = params.getlist(key)
     d["traceback"] = traceback.format_exc()
-    output(d, status=500)
+    hoba.output(d, status=500)
 
 
 if __name__ == "__main__":

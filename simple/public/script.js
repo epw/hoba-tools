@@ -12,7 +12,7 @@ async function change_name() {
 async function app() {
     const user = await HOBA.get_user();
     if (user) {
-	document.getElementById("user").textContent = user.username;
+	document.getElementById("user").textContent = user.name;
     }
 }
 

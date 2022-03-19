@@ -18,6 +18,8 @@ const HOBA_UI = `
 class Hoba {
     // Constructor sets constants, and attaches dialog element to document.
     constructor() {
+	this.user = null;
+
 	// Give localStorage its own "namespace" to stay separate from other scripts on the same server.
 	this.STORAGE = ".hoba.";
 	// Assign constants so keys can be program-recognized, not just strings
@@ -102,7 +104,7 @@ class Hoba {
 	    return null;
 	}
 	const body = await res.json();
-	if (!(confirmation in body)) {
+	if (confirmation && !(confirmation in body)) {
 	    console.error("Error " + res.status);
 	    console.error(body);
 	    return null;
@@ -157,6 +159,7 @@ class Hoba {
 	
 	const challenge_form = new FormData();
 	challenge_form.set("user", user_id);
+	challenge_form.set("pubkey", localStorage.getItem(this.STORAGE + this.S.PUBKEY));
 	const challenge = await this.api_call("hoba.cgi?action=challenge", challenge_form, "challenge");
 	const signature = await this.sign_challenge(challenge["challenge"]);
 
@@ -170,7 +173,7 @@ class Hoba {
 	}
 	this.set_cookie("user", user_id);
 	this.set_cookie("token", token.token);
-	console.log("Token established.");
+	console.log("Token established:", token);
 	document.getElementById("hoba").close();
 	return true;
     }
@@ -190,8 +193,11 @@ class Hoba {
 	    return;
 	}
 	if (localStorage.getItem(this.STORAGE + this.S.PRIVKEY)) {
-	    if (!await this.login()) {
-		this.present_ui();
+	    this.user = await this.get_user();
+	    if (!this.user) {
+		if (!await this.login()) {
+		    this.present_ui();
+		}
 	    }
 	}
     }
@@ -199,7 +205,7 @@ class Hoba {
     // Standard interface for scripts wanting to hook into authentication.
     
     get_user() {
-	return this.api_call("hoba.cgi?action=retrieve", null, "pubkey");
+	return this.api_call("hoba.cgi?action=retrieve", null);
     }
 };
 

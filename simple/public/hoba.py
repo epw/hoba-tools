@@ -1,5 +1,7 @@
+import json
 import os
 import sqlite3
+import sys
 
 def connect(db):
   needs_init = False
@@ -26,7 +28,19 @@ def select_all(cursor, statement, *args):
 def get_user(db, userid, token):
   conn = connect(db)
   cursor = conn.cursor()
-  row = select(cursor, "SELECT * FROM users WHERE rowid = ?", (userid,))
+  user = select(cursor, "SELECT * FROM users WHERE rowid = ?", (userid,))
+  row = select(cursor, "SELECT token FROM keys WHERE userid = ?", (userid,))
   if row and row["token"] == token:
-    return row
+    return user
   return None
+
+# Convenience function for JSON CGI output. Also helpful for other scripts that use the same structure.
+def output(data, status=200, force_str=False):
+  if status != 200:
+    print("Status:", status)
+  print("Content-Type: application/json")
+  print()
+  if force_str:
+    sys.stdout.write(data)
+  else:
+    json.dump(data, sys.stdout)

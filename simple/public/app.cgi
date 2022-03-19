@@ -12,13 +12,6 @@ import traceback
 import hoba
 import values
 
-def output(data, status=200):
-  if status != 200:
-    print("Status:", status)
-  print("Content-Type: application/json")
-  print()
-  json.dump(data, sys.stdout)
-
 def api(params):
   C = cookies.SimpleCookie(os.getenv("HTTP_COOKIE"))
   user = None
@@ -26,7 +19,7 @@ def api(params):
   if "token" in C:
     user = hoba.get_user(values.DB, userid, C["token"].value)
   if not user:
-    output({"error": "Not logged in"}, 403)
+    hoba.output({"error": "Not logged in"}, 403)
     return
 
   conn = hoba.connect(values.DB)
@@ -34,9 +27,13 @@ def api(params):
 
   name = params.getfirst("name")
   if name:
-    cursor.execute("UPDATE users SET username = ? WHERE rowid = ?", (name, userid))
+    data = json.loads(hoba.select(cursor, "SELECT data FROM users WHERE rowid = ?", userid)["data"])
+    if data is None:
+      data = {}
+    data["name"] = name
+    cursor.execute("UPDATE users SET data = ? WHERE rowid = ?", (json.dumps(data), userid))
     conn.commit()
-  output({"name": hoba.select(cursor, "SELECT username FROM users WHERE rowid = ?", (userid,))["username"]})
+  hoba.output(hoba.select(cursor, "SELECT data FROM users WHERE rowid = ?", (userid,))["data"], 200, True)
     
 
 def main():
@@ -48,7 +45,7 @@ def main():
     for key in params.keys():
       d[key] = params.getlist(key)
     d["traceback"] = traceback.format_exc()
-    output(d, status=500)
+    hoba.output(d, status=500)
 
 
 if __name__ == "__main__":

@@ -24,9 +24,6 @@ hoba.js: Library to include on any page that needs to do AJAX calls for the auth
 hoba.cgi: Server side of account management and authentication. Calls out to hoba.py for lowest level, but implements key logic, challenges, and establishing tokens.
 
 MVP TODO
-- Update schema so users have multiple public keys
-  - Separate pubkey table, has pubkey, challenge, and token
-  - Loop through them all when checking challenge or token
 - Make "bind account":
   - Special URL, preferably a hoba.cgi action, that has as a URL param the user and secret. Makes a popup offering to bind this computer to the account specified (URL params also need to describe user in human-readable way, then)
   - Probably interface is in hoba.cgi itself, though needs to include hoba.js in order to use standard account creation logic
@@ -43,3 +40,8 @@ MVP TODO
   - Easy interface to attach "login management" button to any page
 - Switch from localStorage to indexeddb for (at least) private key
 - Test by copying essential files (should just be three) to a new project directory, maybe on a new computer
+
+MVP done
+- Update schema so users have multiple public keys
+  - Separate pubkey table, has pubkey, challenge, and token
+  - Loop through them all when checking challenge or token
