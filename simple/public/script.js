@@ -10,13 +10,12 @@ async function change_name() {
 }
 
 async function app() {
-    const user = await HOBA.get_user();
-    if (user) {
-	document.getElementById("user").textContent = user.name;
+    if (HOBA.user != null) {
+	document.getElementById("user").textContent = HOBA.user.name;
     }
 }
 
 function init() {
-    app();
+    document.addEventListener(HOBA.EVENTS.LOGIN, app);
 }
 init();

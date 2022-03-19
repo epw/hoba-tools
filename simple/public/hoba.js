@@ -30,6 +30,11 @@ class Hoba {
 	    AUTO: "auto",
 	};
 
+	// Events other scripts can listen for on <body>
+	this.EVENTS = {
+	    LOGIN: "LOGIN"
+	};
+
 	this.KEY_ALG = {
 	    name: "RSASSA-PKCS1-v1_5",
 	    hash: {
@@ -41,7 +46,7 @@ class Hoba {
 	    publicExponent: new Uint8Array([1, 0, 1]),
 	};
 	this.PRIV_KEY_EXPORT_FORMAT = "pkcs8";
-	
+
 	this.encoding = "UTF-8";
 	this.decoder = new TextDecoder(this.encoding);
 	this.encoder = new TextEncoder(this.encoding);
@@ -146,6 +151,15 @@ class Hoba {
 	return this.buf2hex(signature);
     }
 
+    send_login_event() {
+	document.dispatchEvent(new Event(this.EVENTS.LOGIN));
+    }
+
+    async get_user() {
+	this.user = await this.api_call("hoba.cgi?action=retrieve", null);
+	return this.user;
+    }
+
     async login() {
 	if (!localStorage.getItem(this.STORAGE + this.S.PRIVKEY)) {
 	    console.error("Can't login before user has been created.");
@@ -174,6 +188,8 @@ class Hoba {
 	this.set_cookie("token", token.token);
 	console.log("Token established:", token);
 	document.getElementById("hoba").close();
+	await this.get_user();
+	this.send_login_event();
 	return true;
     }
 
@@ -192,19 +208,15 @@ class Hoba {
 	    return;
 	}
 	if (localStorage.getItem(this.STORAGE + this.S.PRIVKEY)) {
-	    this.user = await this.get_user();
-	    if (!this.user) {
+	    await this.get_user();
+	    if (this.user) {
+		this.send_login_event();
+	    } else {
 		if (!await this.login()) {
 		    this.present_ui();
 		}
 	    }
 	}
-    }
-
-    // Standard interface for scripts wanting to hook into authentication.
-    
-    get_user() {
-	return this.api_call("hoba.cgi?action=retrieve", null);
     }
 };
 
