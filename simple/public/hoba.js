@@ -19,6 +19,9 @@ const HOBA_UI = `
  <p>
   <button type="button" onclick="HOBA.logout()">Logout</button>
  </p>
+ <p>
+  <button type="button" onclick="HOBA.dialog.close()">Close</button>
+ </p>
 </dialog>
 
 <dialog id="hoba-manage">
@@ -33,6 +36,9 @@ const HOBA_UI = `
  <p>
   <button type="button" onclick="HOBA.logout()">Logout</button>
  </p>
+ <p>
+  <button type="button" onclick="HOBA.dialog.close()">Close</button>
+ </p>
 </dialog>
 `;
 
@@ -42,6 +48,8 @@ class Hoba {
     constructor() {
 	this.user = null;
 
+	this.dialog = null;
+	
 	// Give localStorage its own "namespace" to stay separate from other scripts on the same server.
 	this.STORAGE = ".hoba.";
 	// Assign constants so keys can be program-recognized, not just strings
@@ -255,7 +263,8 @@ class Hoba {
     }
 
     present_ui() {
-	document.getElementById("hoba").showModal();
+	this.dialog = document.getElementById("hoba");
+	this.dialog.showModal();
     }
 
     async generate_share() {
@@ -272,7 +281,8 @@ class Hoba {
     }
     
     manage() {
-	document.getElementById("hoba-manage").showModal();
+	this.dialog = document.getElementById("hoba-manage");
+	this.dialog.showModal();
     }
     
     async auto_login() {
