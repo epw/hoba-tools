@@ -14,6 +14,10 @@ function logout() {
     HOBA.present_ui();
 }
 
+function manage_account() {
+    HOBA.manage(HOBA.user.name);
+}
+
 async function app() {
     if (HOBA.user != null) {
 	document.getElementById("user").textContent = HOBA.user.name;

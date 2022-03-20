@@ -32,6 +32,7 @@ def confirm_bind_output():
 </head>
 <body>
 Presenting login options...
+<span id="hoba-options" data-unique-ui="true"></span>
 </body>
 </html>
 """)

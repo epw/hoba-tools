@@ -27,10 +27,9 @@ const HOBA_UI = `
 }
 </style>
 
-<dialog id="hoba">
+<dialog id="hoba" onclick="HOBA.dialog_click(event)">
  <div class="hoba-bind">
    <div class="hoba-identifier">
-    <div><strong>The brower that generated this link had the code:</strong></div>
     <div id="hoba-identifier-code-binding"></div>
    </div>
    <p>
@@ -46,19 +45,20 @@ const HOBA_UI = `
  <p>
   <button type="button" onclick="HOBA.logout()">Logout</button>
  </p>
- <p>
-  <button type="button" onclick="HOBA.close_dialog()">Close</button>
- </p>
+ <div id="hoba-close-button">
+  <p>
+   <button type="button" onclick="HOBA.close_dialog()">Close</button>
+  </p>
+ </div>
 </dialog>
 
-<dialog id="hoba-manage">
+<dialog id="hoba-manage" onclick="HOBA.dialog_click(event)">
  <p>
   <p>
    <button type="button" onclick="HOBA.generate_share()">Link to Log In Elsewhere</button>
   </p>
   <div id="hoba-sharing">
    <div class="hoba-identifier">
-     <div><strong>The other brower will also show this temporary code:</strong></div>
      <div id="hoba-identifier-code"></div>
    </div>
    <div><div id="hoba-qr"></div></div>
@@ -85,6 +85,8 @@ class Hoba {
     constructor() {
 	this.user = null;
 
+	this.description = null;
+	this.dialog_dismissable = true;
 	this.dialog = null;
 	
 	// Give localStorage its own "namespace" to stay separate from other scripts on the same server.
@@ -338,9 +340,28 @@ WARNING: If you do not have another browser logged in, you won't be able to reco
 	    this.dialog.close();
 	}
     }
+
+    dialog_click(e) {
+	if (e.target.tagName != "DIALOG") {
+	    return;
+	}
+	if (!this.dialog_dismissable) {
+	    return;
+	}
+	
+	const rect = e.target.getBoundingClientRect();
+	if (e.clientX < rect.left || e.clientX > rect.right
+	    || e.clientY < rect.top || e.clientY > rect.bottom) {
+	    this.dialog.close();
+	}
+    }
     
     present_ui() {
 	this.dialog = document.getElementById("hoba");
+	if (document.getElementById("hoba-options").dataset.uniqueUi == "true") {
+	    this.dialog_dismissable = false;
+	    document.getElementById("hoba-close-button").style.display = "none";
+	}
 	this.dialog.showModal();
     }
 
@@ -360,15 +381,14 @@ WARNING: If you do not have another browser logged in, you won't be able to reco
 	const params = new URLSearchParams();
 	params.set("action", "confirm_bind");
 	params.set("user", this.get_cookie("user"));
-	params.set("redirect", location);	
-	const identifier = this.friendly_identifier()
-	params.set("original_identifier", identifier);
+	params.set("redirect", location);
+	params.set("original_identifier", this.description);
 	const secret = await this.api_call("hoba.cgi?action=browser_secret", null, "secret");
 	params.set("secret", secret.secret);
 	url.search = params;
 	field.value = url;
 
-	document.getElementById("hoba-identifier-code").textContent = identifier;
+	document.getElementById("hoba-identifier-code").textContent = this.description;
 
 	const qr = qrcode(0, "L");
 	qr.addData(url.toString());
@@ -396,7 +416,8 @@ WARNING: If you do not have another browser logged in, you won't be able to reco
 	}
     }
     
-    manage() {
+    manage(description) {
+	this.description = description;
 	this.dialog = document.getElementById("hoba-manage");
 	this.dialog.showModal();
     }
