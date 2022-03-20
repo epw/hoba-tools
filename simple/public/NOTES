@@ -34,6 +34,7 @@ MVP TODO
 - Good user feedback when things go wrong
 - Test by copying essential files (should just be three) to a new project directory, maybe on a new computer
 - Write documentation explaining hoba.cgi state machine
+- Randomize user ID
 
 MVP done
 - Update schema so users have multiple public keys
