@@ -60,7 +60,7 @@ def api(params):
     while public_id is None:
       public_id = random.randint(0, 100000)
       row = hoba.select(cursor, "SELECT rowid FROM users WHERE public_id = ?", (public_id,))
-      if row is None:
+      if row is not None:
         public_id = None
     cursor.execute("INSERT INTO users (public_id, data) VALUES (?, ?)", (public_id, "null"))
     userid = cursor.lastrowid
