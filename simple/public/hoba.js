@@ -8,6 +8,12 @@ const HOBA_UI = `
 #hoba .hoba-bind.show {
   display: unset;
 }
+#hoba-create, #hoba-login, #hoba-logout {
+  display: none;
+}
+#hoba-create.show, #hoba-login.show, #hoba-logout.show {
+  display: unset;
+}
 #hoba-sharing {
   display: none;
 }
@@ -35,16 +41,25 @@ const HOBA_UI = `
    <p>
     <button type="button" onclick="HOBA.bind()">Bind account to this browser</button>
    </p>
+   <p>
+    <a id="hoba-new-account-page" href="index.html">New account page</a>
+   </p>
  </div>
- <p>
-  <button type="button" onclick="HOBA.create()">Create Account</button>
- </p>
- <p>
-  <button type="button" onclick="HOBA.login()">Login</button>
- </p>
- <p>
-  <button type="button" onclick="HOBA.logout()">Logout</button>
- </p>
+ <div id="hoba-create" class="show">
+  <p>
+   <button type="button" onclick="HOBA.create()">Create Account</button>
+  </p>
+ </div>
+ <div id="hoba-login">
+  <p>
+   <button type="button" onclick="HOBA.login()">Login</button>
+  </p>
+ </div>
+ <div id="hoba-logout">
+  <p>
+   <button type="button" onclick="HOBA.logout()">Logout</button>
+  </p>
+ </div>
  <div id="hoba-close-button">
   <p>
    <button type="button" onclick="HOBA.close_dialog()">Close</button>
@@ -135,6 +150,7 @@ class Hoba {
 	const url_params = new URLSearchParams(location.search);
 	if (url_params.get("secret")) {
 	    document.querySelector("#hoba .hoba-bind").classList.add("show");
+	    document.querySelector("#hoba-create").classList.remove("show");
 	    document.getElementById("hoba-identifier-code-binding").textContent = url_params.get("original_identifier");
 	}
     }
@@ -226,6 +242,8 @@ class Hoba {
 	localStorage.setItem(this.STORAGE + this.S.USER, body["id"])
 	this.set_cookie("user", body["id"]);
 	console.log("User created");
+	document.getElementById("hoba-create").classList.remove("show");
+	document.getElementById("hoba-login").classList.add("show");
 	this.login();
     }
 
@@ -302,6 +320,8 @@ class Hoba {
 	console.log("Token established:", token);
 	document.getElementById("hoba").close();
 	await this.get_user();
+	document.getElementById("hoba-login").classList.remove("show");
+	document.getElementById("hoba-logout").classList.add("show");
 	this.send_login_event();
 
 	const url_params = new URLSearchParams(location.search);
@@ -358,9 +378,14 @@ WARNING: If you do not have another browser logged in, you won't be able to reco
     
     present_ui() {
 	this.dialog = document.getElementById("hoba");
-	if (document.getElementById("hoba-options").dataset.uniqueUi == "true") {
+	const options = document.getElementById("hoba-options");
+	if (options && options.dataset.uniqueUi == "true") {
 	    this.dialog_dismissable = false;
 	    document.getElementById("hoba-close-button").style.display = "none";
+	}
+	if (localStorage.getItem(this.STORAGE + this.S.PRIVKEY)) {
+	    document.getElementById("hoba-create").classList.remove("show");
+	    document.getElementById("hoba-login").classList.add("show");
 	}
 	this.dialog.showModal();
     }

@@ -24,7 +24,6 @@ hoba.js: Library to include on any page that needs to do AJAX calls for the auth
 hoba.cgi: Server side of account management and authentication. Calls out to hoba.py for lowest level, but implements key logic, challenges, and establishing tokens.
 
 MVP TODO
-- Binding: URL params also need to describe user in human-readable way so you know you're logging yourself in
 - "Manage account" dialog
   - Offer login link as:
     - blank for email to send to (also save email with account)
@@ -51,3 +50,4 @@ MVP done
     - QR code
     - share API (like Wordle)
 - also offer "destroy credentials"
+- Binding: URL params also need to describe user in human-readable way so you know you're logging yourself in

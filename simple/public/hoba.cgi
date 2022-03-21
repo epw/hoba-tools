@@ -128,7 +128,10 @@ def api(params):
     if not user:
       hoba.output({"unauthorized": "Not logged in", "user": C["user"].value, "token": C["token"].value}, 403)
       return
-    hoba.output(user["data"], 200, True)
+    if user["data"] == "null":
+      hoba.output({"hello": "world"})
+    else:
+      hoba.output(user["data"], 200, True)
 
 def main():
   params = cgi.FieldStorage()

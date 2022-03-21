@@ -20,6 +20,9 @@ function manage_account() {
 
 async function app() {
     if (HOBA.user != null) {
+	if (!("name" in HOBA.user)) {
+	    HOBA.user.name = "(new user)";
+	}
 	document.getElementById("user").textContent = HOBA.user.name;
     }
 }
