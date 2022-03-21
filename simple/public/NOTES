@@ -19,7 +19,9 @@ It would be nice if the HOBA object used events so it was easy to say "when the 
 Later nice-to-haves:
 - Good user-data system, easy to use in Python and in JavaScript, with reasonable two-way updating
 - By-browser data, or at least detection (so you can have different darkness settings for the same account on different devices, and so on)
-
+- Offer login link as:
+  - blank for email to send to (also save email with account)
+    - Warn you need to get the email right, whoever gets this will be able to log in as you forever!
 
 
 System slowly taking shape:
@@ -31,12 +33,9 @@ hoba.js: Library to include on any page that needs to do AJAX calls for the auth
 hoba.cgi: Server side of account management and authentication. Calls out to hoba.py for lowest level, but implements key logic, challenges, and establishing tokens.
 
 MVP TODO
-- "Manage account" dialog
-  - Offer login link as:
-    - blank for email to send to (also save email with account)
-      - Warn you need to get the email right, whoever gets this will be able to log in as you forever!
-- Switch from localStorage to indexeddb for (at least) private key
+- Fix behavior when account-binding link is opened in browser with existing account
 - Good user feedback when things go wrong
+- Switch from localStorage to indexeddb for (at least) private key
 - Test by copying essential files (should just be three) to a new project directory, maybe on a new computer
 - Write documentation explaining hoba.cgi state machine
 
