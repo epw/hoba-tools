@@ -54,12 +54,18 @@ def api(params):
   cursor = conn.cursor()
   
   a = params.getfirst("action")
-  userrow = params.getfirst("user")
+  public_id = params.getfirst("user")
   if a == "create":
-    cursor.execute("INSERT INTO users (data) VALUES (\"null\")")
+    public_id = None
+    while public_id is None:
+      public_id = random.randint(0, 100000)
+      row = hoba.select(cursor, "SELECT rowid FROM users WHERE public_id = ?", (public_id,))
+      if row is None:
+        public_id = None
+    cursor.execute("INSERT INTO users (public_id, data) VALUES (?, ?)", (public_id, "null"))
     userid = cursor.lastrowid
     save_pubkey(conn, userid, params.getfirst("pubkey"))
-    hoba.output({"id": userid})
+    hoba.output({"id": public_id})
   elif a == "challenge":
     challenge = generate_secret()
     cursor.execute("UPDATE keys SET challenge = ? WHERE pubkey = ?", (challenge, params.getfirst("pubkey")))
@@ -97,28 +103,28 @@ def api(params):
     conn.commit()
     hoba.output({"secret": secret});
   elif a == "confirm_bind":
-    userid = params.getfirst("user")
-    user = hoba.select(cursor, "SELECT new_browser_secret FROM users WHERE rowid = ?", (userid,))
+    public_id = params.getfirst("user")
+    user = hoba.select(cursor, "SELECT new_browser_secret FROM users WHERE public_id = ?", (public_id,))
     if not user:
-      hoba.output({"not found": "User not found", "user": userid}, 404)
+      hoba.output({"not found": "User not found", "user": public_id}, 404)
       return
     if user["new_browser_secret"] != params.getfirst("secret"):
-      hoba.output({"unauthorized": "Incorrect browser secret.", "user": userid, "secret": params.getfirst("secret")}, 403)
+      hoba.output({"unauthorized": "Incorrect browser secret.", "user": public_id, "secret": params.getfirst("secret")}, 403)
       return
     confirm_bind_output()
   elif a == "bind":
-    userid = params.getfirst("user")
-    user = hoba.select(cursor, "SELECT new_browser_secret FROM users WHERE rowid = ?", (userid,))
+    public_id = params.getfirst("user")
+    user = hoba.select(cursor, "SELECT rowid, new_browser_secret FROM users WHERE public_id = ?", (public_id,))
     if not user:
-      hoba.output({"not found": "User not found", "user": userid}, 404)
+      hoba.output({"not found": "User not found", "user": public_id}, 404)
       return
     if user["new_browser_secret"] != params.getfirst("secret"):
-      hoba.output({"unauthorized": "Incorrect browser secret.", "user": userid, "secret": params.getfirst("secret")}, 403)
+      hoba.output({"unauthorized": "Incorrect browser secret.", "user": public_id, "secret": params.getfirst("secret")}, 403)
       return
-    save_pubkey(conn, userid, params.getfirst("pubkey"))
-    cursor.execute("UPDATE users SET new_browser_secret = NULL WHERE rowid = ?", (userid,))
+    save_pubkey(conn, user["rowid"], params.getfirst("pubkey"))
+    cursor.execute("UPDATE users SET new_browser_secret = NULL WHERE rowid = ?", (user["rowid"],))
     conn.commit()
-    hoba.output({"id": userid})
+    hoba.output({"id": public_id})
     
   elif a == "retrieve":
     if "token" not in C:
@@ -129,7 +135,7 @@ def api(params):
       hoba.output({"unauthorized": "Not logged in", "user": C["user"].value, "token": C["token"].value}, 403)
       return
     if user["data"] == "null":
-      hoba.output({"hello": "world"})
+      hoba.output({"empty": True})
     else:
       hoba.output(user["data"], 200, True)
 
