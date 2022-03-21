@@ -6,7 +6,8 @@ async function change_name() {
     const form = new FormData();
     form.set("name", name);
     const new_name = await HOBA.api_call("app.cgi", form, "name");
-    document.getElementById("user").textContent = new_name.name;
+    HOBA.user.name = new_name.name;
+    document.getElementById("user").textContent = HOBA.user.name;
 }
 
 function logout() {

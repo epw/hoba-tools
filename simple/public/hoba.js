@@ -100,7 +100,7 @@ const HOBA_CONTROLS_CREATE = `
 <button type="button" onclick="HOBA.create()">Create Account</button>
 `;
 const HOBA_CONTROLS_MANAGE = `
-<button type="button" id="hoba-manage-button" class="hoba-hide" onclick="HOBA.manage()">Manage Account</button>
+<button type="button" id="hoba-manage-button" onclick="HOBA.manage()">Manage Accounts</button>
 <button type="button" id="hoba-login-immediate" class="hoba-hide" onclick="HOBA.login()">Login</button>
 <button type="button" id="hoba-logout-immediate" class="hoba-hide" onclick="HOBA.logout()">Logout</button>
 `;
@@ -326,7 +326,6 @@ class Hoba {
     async get_user() {
 	this.user = await this.api_call("hoba.cgi?action=retrieve", null);
 	this.controls.innerHTML = HOBA_CONTROLS_MANAGE;
-	document.getElementById("hoba-manage-button").classList.remove(this.CSS.HIDE);
 	document.getElementById("hoba-login-immediate").classList.add(this.CSS.HIDE);
 	document.getElementById("hoba-logout-immediate").classList.remove(this.CSS.HIDE);
 	return this.user;
