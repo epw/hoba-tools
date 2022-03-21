@@ -28,11 +28,11 @@ def select_all(cursor, statement, *args):
 def get_user(db, userid, token):
   conn = connect(db)
   cursor = conn.cursor()
-  user = select(cursor, "SELECT rowid, data FROM users WHERE rowid = ?", (userid,))
+  user = select(cursor, "SELECT rowid, public_id, data FROM users WHERE rowid = ?", (userid,))
   rows = select_all(cursor, "SELECT token FROM keys WHERE userid = ?", (userid,))
   for row in rows:
     if row and row["token"] == token:
-      return user
+      return dict(user)
   return None
 
 # Convenience function for JSON CGI output. Also helpful for other scripts that use the same structure.

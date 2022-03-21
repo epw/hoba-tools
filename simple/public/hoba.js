@@ -323,11 +323,32 @@ class Hoba {
 	document.dispatchEvent(new Event(this.EVENTS.LOGOUT));
     }
 
+    css_class_add(el, class_name) {
+	if (typeof(el) == "string") {
+	    el = document.getElementById(el);
+	}
+	if (el) {
+	    el.classList.add(class_name);
+	    return el;
+	}
+    }
+    css_class_remove(el, class_name) {
+	if (typeof(el) == "string") {
+	    el = document.getElementById(el);
+	}
+	if (el) {
+	    el.classList.remove(class_name);
+	    return el;
+	}
+    }
+
     async get_user() {
 	this.user = await this.api_call("hoba.cgi?action=retrieve", null);
-	this.controls.innerHTML = HOBA_CONTROLS_MANAGE;
-	document.getElementById("hoba-login-immediate").classList.add(this.CSS.HIDE);
-	document.getElementById("hoba-logout-immediate").classList.remove(this.CSS.HIDE);
+	if (this.controls) {
+	    this.controls.innerHTML = HOBA_CONTROLS_MANAGE;
+	}
+	this.css_class_add("hoba-login-immediate", this.CSS.HIDE);
+	this.css_class_remove("hoba-logout-immediate", this.CSS.HIDE);
 	return this.user;
     }
 

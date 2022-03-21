@@ -15,6 +15,13 @@ The client doesn't know how to re-authenticate a token, all it can do is present
 It would be nice if the HOBA object used events so it was easy to say "when the user first logs in" from other scripts.
 
 
+
+Later nice-to-haves:
+- Good user-data system, easy to use in Python and in JavaScript, with reasonable two-way updating
+- By-browser data, or at least detection (so you can have different darkness settings for the same account on different devices, and so on)
+
+
+
 System slowly taking shape:
 
 There will be a small directory of files a user can copy into a user-visible, CGI-enabled directory on their Web server.
