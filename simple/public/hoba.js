@@ -323,7 +323,7 @@ class Hoba {
 	document.dispatchEvent(new Event(this.EVENTS.LOGOUT));
     }
 
-    css_class_add(el, class_name) {
+    safe_css_class_add(el, class_name) {
 	if (typeof(el) == "string") {
 	    el = document.getElementById(el);
 	}
@@ -332,7 +332,7 @@ class Hoba {
 	    return el;
 	}
     }
-    css_class_remove(el, class_name) {
+    safe_css_class_remove(el, class_name) {
 	if (typeof(el) == "string") {
 	    el = document.getElementById(el);
 	}
@@ -347,8 +347,8 @@ class Hoba {
 	if (this.controls) {
 	    this.controls.innerHTML = HOBA_CONTROLS_MANAGE;
 	}
-	this.css_class_add("hoba-login-immediate", this.CSS.HIDE);
-	this.css_class_remove("hoba-logout-immediate", this.CSS.HIDE);
+	this.safe_css_class_add("hoba-login-immediate", this.CSS.HIDE);
+	this.safe_css_class_remove("hoba-logout-immediate", this.CSS.HIDE);
 	return this.user;
     }
 
