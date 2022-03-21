@@ -325,6 +325,7 @@ class Hoba {
 
     async get_user() {
 	this.user = await this.api_call("hoba.cgi?action=retrieve", null);
+	this.controls.innerHTML = HOBA_CONTROLS_MANAGE;
 	document.getElementById("hoba-manage-button").classList.remove(this.CSS.HIDE);
 	document.getElementById("hoba-login-immediate").classList.add(this.CSS.HIDE);
 	document.getElementById("hoba-logout-immediate").classList.remove(this.CSS.HIDE);

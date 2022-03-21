@@ -27,7 +27,7 @@ def api(params):
 
   name = params.getfirst("name")
   if name:
-    data = json.loads(hoba.select(cursor, "SELECT data FROM users WHERE rowid = ?", userid)["data"])
+    data = json.loads(hoba.select(cursor, "SELECT data FROM users WHERE rowid = ?", (userid,))["data"])
     if data is None:
       data = {}
     data["name"] = name
