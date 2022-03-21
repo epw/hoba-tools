@@ -1,5 +1,4 @@
-// While this is outside of the HOBA namespace, it's a lot more convenient to have
-// the template HTML at the top of the file.
+// Template HTML is at the top of the file, even though that means it's outside of the HOBA.* namespace
 const HOBA_UI = `
 <style>
 #hoba .hoba-bind {
@@ -94,6 +93,11 @@ const HOBA_UI = `
 </dialog>
 `;
 
+const HOBA_CONTROLS = `
+<button type="button" onclick="HOBA.manage()">Manage Account</button>
+<button type="button" onclick="HOBA.logout()">Logout</button>
+`;
+
 // Class is used to create a namespace but keep all the functions available.
 class Hoba {
     // Constructor sets constants, and attaches dialog element to document.
@@ -103,7 +107,11 @@ class Hoba {
 	this.description = null;
 	this.dialog_dismissable = true;
 	this.dialog = null;
-	
+
+	// Author-provided configuration
+	this.options = {};
+	this.controls = null;
+
 	// Give localStorage its own "namespace" to stay separate from other scripts on the same server.
 	this.STORAGE = ".hoba.";
 	// Assign constants so keys can be program-recognized, not just strings
@@ -153,6 +161,18 @@ class Hoba {
 	    document.querySelector("#hoba-create").classList.remove("show");
 	    document.getElementById("hoba-identifier-code-binding").textContent = url_params.get("original_identifier");
 	}
+
+	const options = document.getElementById("hoba-options");
+	if (options) {
+	    this.options = options.dataset;
+	}
+	this.controls = document.getElementById("hoba-controls");
+
+	if (!this.controls) {
+	    console.warn("No #hoba-controls element found, make sure you've provided a custom way for the user to manage their account.");
+	    return;
+	}
+	this.controls.innerHTML = HOBA_CONTROLS;
     }
     
     loaded() {
@@ -378,8 +398,7 @@ WARNING: If you do not have another browser logged in, you won't be able to reco
     
     present_ui() {
 	this.dialog = document.getElementById("hoba");
-	const options = document.getElementById("hoba-options");
-	if (options && options.dataset.uniqueUi == "true") {
+	if (this.options.uniqueUi == "true") {
 	    this.dialog_dismissable = false;
 	    document.getElementById("hoba-close-button").style.display = "none";
 	}
@@ -441,8 +460,10 @@ WARNING: If you do not have another browser logged in, you won't be able to reco
 	}
     }
     
-    manage(description) {
-	this.description = description;
+    manage() {
+	if ("manageSetup" in this.controls.dataset) {
+	    window[this.controls.dataset.manageSetup]();
+	}
 	this.dialog = document.getElementById("hoba-manage");
 	this.dialog.showModal();
     }

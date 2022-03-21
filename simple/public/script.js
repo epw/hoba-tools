@@ -15,7 +15,7 @@ function logout() {
 }
 
 function manage_account() {
-    HOBA.manage(HOBA.user.name);
+    HOBA.description = HOBA.user.name;
 }
 
 async function app() {
