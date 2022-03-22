@@ -22,7 +22,21 @@ Later nice-to-haves:
 - Offer login link as:
   - blank for email to send to (also save email with account)
     - Warn you need to get the email right, whoever gets this will be able to log in as you forever!
-
+- Support non-public account creation
+  - No "Create Account" button in UI
+  - Button like the standard one to login a new brwoser, but is for account generation instead
+  - Probably looks like a new user row with a secret but no associated public keys
+  - So it's possible to present the secret and a new public key, and that fills in the account
+  - Need to figure out ACLs (can I make it so only I can give out accounts on my server, but for another server, anyone with an account could invite someone?)
+- When share-generation button is clicked, produce a new, short URL that could be hand-typed
+  - As long as the dialog is open, short URL works. Delete when it's closed
+  - Visiting the URL gives a button to ask to bind accounts, like normal
+  - But instead of working right away, it makes a pop-up in the first browser asking if they want to allow the new one to bind
+  - Identify with short PINs again
+  - If agreed on the old browser, then the new one is given a secret and binds as usual
+  - Don't give the secret until approved, otherwise JavaScript vulnerability
+  - I guess this means you need some websockets? Or you could poll once every few seconds, since it's only needed while these windows are open
+- Support passwords that generate private keys, for portable logins
 
 System slowly taking shape:
 
