@@ -6,3 +6,9 @@ body {
 a {
     color: #66f;
 }
+
+.hoba-controls {
+    background: #222;
+    border: medium inset #444;
+    padding: 4px 6px;
+}

@@ -37,6 +37,8 @@ Later nice-to-haves:
   - Don't give the secret until approved, otherwise JavaScript vulnerability
   - I guess this means you need some websockets? Or you could poll once every few seconds, since it's only needed while these windows are open
 - Support passwords that generate private keys, for portable logins
+- "Advanced menu" for when you know what you're doing and something under the hood is wrong
+  - Import keypair directly from .pem files
 
 System slowly taking shape:
 
@@ -47,7 +49,7 @@ hoba.js: Library to include on any page that needs to do AJAX calls for the auth
 hoba.cgi: Server side of account management and authentication. Calls out to hoba.py for lowest level, but implements key logic, challenges, and establishing tokens.
 
 MVP TODO
-- Fix behavior when account-binding link is opened in browser with existing account
+- Combine <dialog>s into one, so it's easier to style and have a place for error messages.
 - Good user feedback when things go wrong
 - Switch from localStorage to indexeddb for (at least) private key
 - Test by copying essential files (should just be three) to a new project directory, maybe on a new computer
@@ -71,3 +73,6 @@ MVP done
 - Binding: URL params also need to describe user in human-readable way so you know you're logging yourself in
 - Easy interface to attach "login management" button to any page
 - Randomize user ID
+- Fix behavior when account-binding link is opened in browser with existing account
+  - It's weird, you can either log in and ignore the link, or overwrite your account, but this isn't actually broken
+  - Just needs better documentation

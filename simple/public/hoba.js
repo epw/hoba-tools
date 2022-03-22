@@ -97,12 +97,16 @@ const HOBA_UI = `
 `;
 
 const HOBA_CONTROLS_CREATE = `
-<button type="button" onclick="HOBA.create()">Create Account</button>
+<span class="hoba-controls">
+ <button type="button" onclick="HOBA.create()">Create Account</button>
+</span>
 `;
 const HOBA_CONTROLS_MANAGE = `
-<button type="button" id="hoba-manage-button" onclick="HOBA.manage()">Manage Accounts</button>
-<button type="button" id="hoba-login-immediate" class="hoba-hide" onclick="HOBA.login()">Login</button>
-<button type="button" id="hoba-logout-immediate" class="hoba-hide" onclick="HOBA.logout()">Logout</button>
+<span class="hoba-controls">
+ <button type="button" id="hoba-manage-button" onclick="HOBA.manage()">Manage Accounts</button>
+ <button type="button" id="hoba-login-immediate" class="hoba-hide" onclick="HOBA.login()">Login</button>
+ <button type="button" id="hoba-logout-immediate" class="hoba-hide" onclick="HOBA.logout()">Logout</button>
+</span>
 `;
 
 // Class is used to create a namespace but keep all the functions available.
