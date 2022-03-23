@@ -33,6 +33,10 @@ const HOBA_UI = `
 #hoba-controls .hoba-immediate-button.hoba-show {
   display: unset;
 }
+#hoba-error-message {
+  color: red;
+  font-weight: bold;
+}
 </style>
 
 <dialog id="hoba" onclick="HOBA.dialog_click(event)">
@@ -85,6 +89,8 @@ const HOBA_UI = `
   <p>
    <button type="button" onclick="HOBA.close_dialog()">Close</button>
   </p>
+ </div>
+ <div id="hoba-error-message">
  </div>
 </dialog>
 `;
@@ -237,6 +243,10 @@ class Hoba {
 	return Array.prototype.map.call(new Uint8Array(buf), x=>(('00'+x.toString(16)).slice(-2))).join('');
     }
 
+    show_error(msg) {
+	document.getElementById("hoba-error-message").innerHTML = msg;
+    }
+    
     // Convenience wrapper for AJAX call
     async api_call(url, form, confirmation) {
 	const res = await fetch(url, {
@@ -246,13 +256,14 @@ class Hoba {
 	if (res.status != 200) {
 	    console.error("Error " + res.status);
 	    console.error(await res.text());
-	    return null;
+	    return {"error": "Code " + res.status,
+		    "status": res.status};
 	}
 	const body = await res.json();
 	if (confirmation && !(confirmation in body)) {
 	    console.error("Error " + res.status);
 	    console.error(body);
-	    return null;
+	    return {"error": body};
 	}
 	return body;
     }
@@ -279,8 +290,15 @@ class Hoba {
 	const form = new FormData();
 	form.set("pubkey", public_key);
 	const body = await this.api_call("hoba.cgi?action=create", form, "id");
-	if (!body) {
+	if ("error" in body) {
 	    console.error("Failed to create new user.");
+	    let err = "<p>Failed to create new user.";
+	    if ("status" in body) {
+		err += " Code: " + body.status;
+	    }
+	    err += "</p>";
+	    this.show_error(err);
+	    this.clear_user();
 	    return;
 	}
 	localStorage.setItem(this.STORAGE + this.S.USER, body["id"])
@@ -398,6 +416,15 @@ class Hoba {
 	location.reload();
     }
 
+    clear_user() {
+	for (let cookie of ["token", "user"]) {
+	    this.clear_cookie(cookie);
+	}
+	for (let field of [this.S.USER, this.S.PUBKEY, this.S.PRIVKEY, this.S.AUTO]) {
+	    localStorage.removeItem(this.STORAGE + field);
+	}
+    }
+    
     async destroy() {
 	const confirmation = confirm(`Really destroy credentials?
 WARNING: If you do not have another browser logged in, you won't be able to recover this account!`);
@@ -405,13 +432,7 @@ WARNING: If you do not have another browser logged in, you won't be able to reco
 	    return;
 	}
 	this.logout();
-	for (let cookie of ["token", "user"]) {
-	    this.clear_cookie(cookie);
-	}
-	for (let field of [this.S.USER, this.S.PUBKEY, this.S.PRIVKEY, this.S.AUTO]) {
-	    console.log(this.STORAGE + field);
-	    localStorage.removeItem(this.STORAGE + field);
-	}
+	this.clear_user();
     }
 
     close_dialog() {
