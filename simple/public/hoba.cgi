@@ -105,7 +105,7 @@ def api(params):
     public_id = params.getfirst("user")
     user = hoba.select(cursor, "SELECT new_browser_secret FROM users WHERE public_id = ?", (public_id,))
     if not user:
-      hoba.output({"not found": "User not found", "user": public_id}, 404)
+      hoba.output({"error": "User not found", "user": public_id}, 404)
       return
     if user["new_browser_secret"] != params.getfirst("secret"):
       hoba.output({"error": "Incorrect browser secret.", "user": public_id, "secret": params.getfirst("secret")}, 403)
@@ -115,9 +115,9 @@ def api(params):
     public_id = params.getfirst("user")
     user = hoba.select(cursor, "SELECT rowid, new_browser_secret FROM users WHERE public_id = ?", (public_id,))
     if not user:
-      hoba.output({"not found": "User not found", "user": public_id}, 404)
+      hoba.output({"error": "User not found", "user": public_id}, 404)
       return
-    if user["new_browser_secret"] != params.getfirst("secret"):
+    if user["new_browser_secret"] != params.getfirst("secret") + 'x':
       hoba.output({"error": "Incorrect browser secret.", "user": public_id, "secret": params.getfirst("secret")}, 403)
       return
     save_pubkey(conn, user["rowid"], params.getfirst("pubkey"))

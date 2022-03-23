@@ -286,6 +286,9 @@ class Hoba {
 		err += " Code: " + body.status;
 	    }
 	    err += "</p>";
+	    if ("error" in body.error) {
+		err += "<p>" + body.error.error + "</p>";
+	    }
 	    this.show_error(err);
 	    this.present_ui();
 	    return true;
@@ -386,11 +389,9 @@ class Hoba {
 	const user = await this.api_call("hoba.cgi?action=retrieve", null);
 	if (this.api_error(user, "Error retrieving user data.")) {
 	    this.user = null;
-	    if ("unauthorized" in user.error) {
-		this.append_error(`<p>User ${user.error.user} not logged in.</p>`);
-	    }
 	    return;
 	}
+	this.user = user;
 	this.update_ui();
 	return this.user;
     }
@@ -421,9 +422,6 @@ class Hoba {
 	signature_form.set("signature", signature);
 	const token = await this.api_call("hoba.cgi?action=token", signature_form, "token");
 	if (this.api_error(token, "Failed challenge signing, required to log in.")) {
-	    if ("error" in token.error) {
-		this.append_error("<p>" + token.error.error + "</p>");
-	    }
 	    return;
 	}
 	this.set_cookie("user", user_id);
@@ -521,6 +519,9 @@ WARNING: If you do not have another browser logged in, you won't be able to reco
 	params.set("redirect", location);
 	params.set("original_identifier", this.description);
 	const secret = await this.api_call("hoba.cgi?action=browser_secret", null, "secret");
+	if (this.api_error(secret, "Error generating secret.")) {
+	    return;
+	}
 	params.set("secret", secret.secret);
 	url.search = params;
 	field.value = url;
