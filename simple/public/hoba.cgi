@@ -74,7 +74,7 @@ def api(params):
   elif a == "token":
     challenge_key = hoba.select(cursor, "SELECT rowid, pubkey, challenge FROM keys WHERE pubkey = ?", (params.getfirst("pubkey"),))
     if not challenge_key:
-      hoba.output({"error": "No user found for ID {}".format(userrow)}, 404)
+      hoba.output({"error": "No user found for ID {}".format(public_id)}, 404)
       return
     key_row = challenge_key["rowid"]
     h = SHA256.new(challenge_key["challenge"].encode("utf8"))
@@ -83,8 +83,7 @@ def api(params):
     try:
       pkcs1_15.new(public_key).verify(h, signature)
     except ValueError as e:
-      hoba.output({"error": "Challenge signing failed.",
-              "ValueError": str(e)})
+      hoba.output({"error": str(e)})
       return
     token = generate_secret()
     cursor.execute("UPDATE keys SET challenge = NULL, token = ? WHERE rowid = ?", (token, key_row))
@@ -94,7 +93,7 @@ def api(params):
   elif a == "browser_secret":
     user = hoba.get_user(values.DB, C["user"].value, C["token"].value)
     if not user:
-      hoba.output({"unauthorized": "Not logged in", "user": C["user"].value, "token": C["token"].value}, 403)
+      hoba.output({"error": "Not logged in", "user": C["user"].value, "token": C["token"].value}, 403)
       return
     secret = generate_secret()
     expiry = datetime.now() + timedelta(days=1)
@@ -109,7 +108,7 @@ def api(params):
       hoba.output({"not found": "User not found", "user": public_id}, 404)
       return
     if user["new_browser_secret"] != params.getfirst("secret"):
-      hoba.output({"unauthorized": "Incorrect browser secret.", "user": public_id, "secret": params.getfirst("secret")}, 403)
+      hoba.output({"error": "Incorrect browser secret.", "user": public_id, "secret": params.getfirst("secret")}, 403)
       return
     confirm_bind_output()
   elif a == "bind":
@@ -119,7 +118,7 @@ def api(params):
       hoba.output({"not found": "User not found", "user": public_id}, 404)
       return
     if user["new_browser_secret"] != params.getfirst("secret"):
-      hoba.output({"unauthorized": "Incorrect browser secret.", "user": public_id, "secret": params.getfirst("secret")}, 403)
+      hoba.output({"error": "Incorrect browser secret.", "user": public_id, "secret": params.getfirst("secret")}, 403)
       return
     save_pubkey(conn, user["rowid"], params.getfirst("pubkey"))
     cursor.execute("UPDATE users SET new_browser_secret = NULL WHERE rowid = ?", (user["rowid"],))
@@ -128,11 +127,11 @@ def api(params):
     
   elif a == "retrieve":
     if "token" not in C:
-      hoba.output({"unauthorized": "Not logged in", "user": C["user"].value}, 403)
+      hoba.output({"error": "Not logged in", "user": C["user"].value}, 403)
       return
     user = hoba.get_user(values.DB, C["user"].value, C["token"].value)
     if not user:
-      hoba.output({"unauthorized": "Not logged in", "user": C["user"].value, "token": C["token"].value}, 403)
+      hoba.output({"error": "Not logged in", "user": C["user"].value, "token": C["token"].value}, 403)
       return
     if user["data"] == "null":
       hoba.output({"empty": True})

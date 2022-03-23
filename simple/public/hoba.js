@@ -188,6 +188,7 @@ class Hoba {
     }
 
     update_ui() {
+	this.clear_error();
 	Array.from(document.querySelectorAll(".hoba-ui-row, .hoba-immediate-button")).map(el => el.classList.remove(this.CSS.SHOW));
 	let ids_to_show = [];
 	if (this.url_params.get("secret")) {
@@ -246,6 +247,12 @@ class Hoba {
     show_error(msg) {
 	document.getElementById("hoba-error-message").innerHTML = msg;
     }
+    append_error(msg) {
+	document.getElementById("hoba-error-message").innerHTML += msg;
+    }
+    clear_error() {
+	document.getElementById("hoba-error-message").innerHTML = "";
+    }
     
     // Convenience wrapper for AJAX call
     async api_call(url, form, confirmation) {
@@ -254,10 +261,13 @@ class Hoba {
 	    body: form
 	});
 	if (res.status != 200) {
-	    console.error("Error " + res.status);
-	    console.error(await res.text());
-	    return {"error": "Code " + res.status,
-		    "status": res.status};
+	    let body = await res.text();
+	    try {
+		body = JSON.parse(body);
+	    } finally {
+		return {"error": body,
+			"status": res.status};
+	    }
 	}
 	const body = await res.json();
 	if (confirmation && !(confirmation in body)) {
@@ -266,6 +276,21 @@ class Hoba {
 	    return {"error": body};
 	}
 	return body;
+    }
+
+    api_error(body, msg) {
+    	if ("error" in body) {
+	    console.error(msg);
+	    let err = "<p>" + msg;
+	    if ("status" in body) {
+		err += " Code: " + body.status;
+	    }
+	    err += "</p>";
+	    this.show_error(err);
+	    this.present_ui();
+	    return true;
+	}
+	return false;
     }
 
     // PRIMARY USER MANAGEMENT
@@ -290,14 +315,7 @@ class Hoba {
 	const form = new FormData();
 	form.set("pubkey", public_key);
 	const body = await this.api_call("hoba.cgi?action=create", form, "id");
-	if ("error" in body) {
-	    console.error("Failed to create new user.");
-	    let err = "<p>Failed to create new user.";
-	    if ("status" in body) {
-		err += " Code: " + body.status;
-	    }
-	    err += "</p>";
-	    this.show_error(err);
+	if (this.api_error(body, "Failed to create new user.")) {
 	    this.clear_user();
 	    return;
 	}
@@ -317,8 +335,8 @@ class Hoba {
 	form.set("user", this.url_params.get("user"));
 	form.set("secret", this.url_params.get("secret"));
 	const body = await this.api_call("hoba.cgi?action=bind", form, "id");
-	if (!body) {
-	    console.error("Failed to bind to existing user.");
+	if (this.api_error(body, "Failed to bind to existing user.")) {
+	    this.clear_user();
 	    return;
 	}
 	localStorage.setItem(this.STORAGE + this.S.USER, body["id"])
@@ -365,7 +383,14 @@ class Hoba {
     }
 
     async get_user() {
-	this.user = await this.api_call("hoba.cgi?action=retrieve", null);
+	const user = await this.api_call("hoba.cgi?action=retrieve", null);
+	if (this.api_error(user, "Error retrieving user data.")) {
+	    this.user = null;
+	    if ("unauthorized" in user.error) {
+		this.append_error(`<p>User ${user.error.user} not logged in.</p>`);
+	    }
+	    return;
+	}
 	this.update_ui();
 	return this.user;
     }
@@ -373,6 +398,8 @@ class Hoba {
     async login() {
 	if (!localStorage.getItem(this.STORAGE + this.S.PRIVKEY)) {
 	    console.error("Can't login before user has been created.");
+	    this.show_error("<p>Can't login before user has been created.</p><p><a href='#' onclick='location.reload()'>Reload if Create Account button is not visible.</a></p>");
+	    this.present_ui();
 	    return;
 	}
 
@@ -384,15 +411,20 @@ class Hoba {
 	challenge_form.set("user", user_id);
 	challenge_form.set("pubkey", localStorage.getItem(this.STORAGE + this.S.PUBKEY));
 	const challenge = await this.api_call("hoba.cgi?action=challenge", challenge_form, "challenge");
+	if (this.api_error(challenge, "Error retrieving challenge, which is required to log in.")) {
+	    return;
+	}
 	const signature = await this.sign_challenge(challenge["challenge"]);
 	const signature_form = new FormData();
 	signature_form.set("user", localStorage.getItem(this.STORAGE + this.S.USER));
 	signature_form.set("pubkey", localStorage.getItem(this.STORAGE + this.S.PUBKEY));
 	signature_form.set("signature", signature);
 	const token = await this.api_call("hoba.cgi?action=token", signature_form, "token");
-	if (!token) {
-	    console.error("Failed to log in.");
-	    return false;
+	if (this.api_error(token, "Failed challenge signing, required to log in.")) {
+	    if ("error" in token.error) {
+		this.append_error("<p>" + token.error.error + "</p>");
+	    }
+	    return;
 	}
 	this.set_cookie("user", user_id);
 	this.set_cookie("token", token.token);
@@ -465,7 +497,9 @@ WARNING: If you do not have another browser logged in, you won't be able to reco
 	    this.dialog_dismissable = false;
 	    document.getElementById("hoba-close-button").classList.remove(this.CSS.SHOW);
 	}
-	this.dialog.showModal();
+	if (!this.dialog.open) {
+	    this.dialog.showModal();
+	}
     }
 
     friendly_identifier() {
