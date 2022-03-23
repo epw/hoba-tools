@@ -49,7 +49,6 @@ hoba.js: Library to include on any page that needs to do AJAX calls for the auth
 hoba.cgi: Server side of account management and authentication. Calls out to hoba.py for lowest level, but implements key logic, challenges, and establishing tokens.
 
 MVP TODO
-- Combine <dialog>s into one, so it's easier to style and have a place for error messages.
 - Good user feedback when things go wrong
 - Switch from localStorage to indexeddb for (at least) private key
 - Test by copying essential files (should just be three) to a new project directory, maybe on a new computer
@@ -76,3 +75,4 @@ MVP done
 - Fix behavior when account-binding link is opened in browser with existing account
   - It's weird, you can either log in and ignore the link, or overwrite your account, but this isn't actually broken
   - Just needs better documentation
+- Combine <dialog>s into one, so it's easier to style and have a place for error messages.

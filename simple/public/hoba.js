@@ -172,11 +172,11 @@ class Hoba {
 	}
 
 	this.controls = document.getElementById("hoba-controls");
-	if (!this.controls) {
+	if (this.controls) {
+	    this.controls.innerHTML = HOBA_CONTROLS;
+	} else {
 	    console.warn("No #hoba-controls element found, make sure you've provided a custom way for the user to manage their account.");
-	    return;
 	}
-	this.controls.innerHTML = HOBA_CONTROLS;
 
 	this.update_ui();
     }
@@ -184,7 +184,9 @@ class Hoba {
     update_ui() {
 	Array.from(document.querySelectorAll(".hoba-ui-row, .hoba-immediate-button")).map(el => el.classList.remove(this.CSS.SHOW));
 	let ids_to_show = [];
-	if (localStorage.getItem(this.STORAGE + this.S.PRIVKEY)) {
+	if (this.url_params.get("secret")) {
+	    ids_to_show = ["hoba-bind"];
+	} else if (localStorage.getItem(this.STORAGE + this.S.PRIVKEY)) {
 	    if (this.user) {
 		ids_to_show = ["hoba-manage-button", "hoba-logout", "hoba-logout-immediate", "hoba-destroy",
 			       "hoba-sharing"];
@@ -193,9 +195,6 @@ class Hoba {
 	    }
 	} else {
 	    ids_to_show = ["hoba-create", "hoba-create-immediate"];
-	}
-	if (this.url_params.get("secret")) {
-	    ids_to_show.push("hoba-bind");
 	}
 	ids_to_show.map(id => this.safe_css_class_add(id, this.CSS.SHOW));
     }
