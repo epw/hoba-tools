@@ -274,7 +274,9 @@ class Hoba {
 	    return {"error": "No HOBA API URL",
 		    "status": 0};
 	}
-	const res = await fetch(this.options.api + url, {
+	const base_url = new URL(this.options.api, location);
+	const api_url = new URL(url, base_url);
+	const res = await fetch(api_url, {
 	    method: "POST",
 	    body: form
 	});

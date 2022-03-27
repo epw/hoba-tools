@@ -17,7 +17,8 @@ import sys
 import traceback
 
 import hoba
-import values
+
+DB = "/var/local/eric/hoba.sqlite"
 
 C = cookies.SimpleCookie(os.getenv("HTTP_COOKIE"))
 
@@ -51,7 +52,7 @@ def save_pubkey(conn, userid, pubkey):
   conn.commit()
   
 def api(params):
-  conn = hoba.connect(values.DB)
+  conn = hoba.connect(DB)
   cursor = conn.cursor()
   
   a = params.getfirst("action")
@@ -92,7 +93,7 @@ def api(params):
     hoba.output({"token": token})
 
   elif a == "browser_secret":
-    user = hoba.get_user(values.DB, C["user"].value, C["token"].value)
+    user = hoba.get_user(DB, C["user"].value, C["token"].value)
     if not user:
       hoba.output({"error": "Not logged in", "user": C["user"].value, "token": C["token"].value}, 403)
       return
@@ -130,7 +131,7 @@ def api(params):
     if "token" not in C:
       hoba.output({"error": "Not logged in", "user": C["user"].value}, 403)
       return
-    user = hoba.get_user(values.DB, C["user"].value, C["token"].value)
+    user = hoba.get_user(DB, C["user"].value, C["token"].value)
     if not user:
       hoba.output({"error": "Not logged in", "user": C["user"].value, "token": C["token"].value}, 403)
       return
