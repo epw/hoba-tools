@@ -29,10 +29,11 @@ def confirm_bind_output():
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <link rel="stylesheet" href="style.css">
 <script src="hoba.js"></script>
+<meta name="hoba:api" content="hoba.cgi">
+<meta name="hoba:unique_ui" content="true">
 </head>
 <body>
 Presenting login options...
-<span id="hoba-options" data-unique-ui="true"></span>
 </body>
 </html>
 """)
@@ -117,7 +118,7 @@ def api(params):
     if not user:
       hoba.output({"error": "User not found", "user": public_id}, 404)
       return
-    if user["new_browser_secret"] != params.getfirst("secret") + 'x':
+    if user["new_browser_secret"] != params.getfirst("secret"):
       hoba.output({"error": "Incorrect browser secret.", "user": public_id, "secret": params.getfirst("secret")}, 403)
       return
     save_pubkey(conn, user["rowid"], params.getfirst("pubkey"))
