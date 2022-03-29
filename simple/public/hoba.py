@@ -36,7 +36,7 @@ def get_user_identified(db, token, rowid=None, public_id=None):
   elif rowid:
     selector = "rowid"
     value = rowid
-  select_statement = "SELECT rowid, public_id, data FROM users WHERE {} = ?".format(selector)
+  select_statement = "SELECT rowid, public_id, data, acl_create_account FROM users WHERE {} = ?".format(selector)
   user = select(cursor, select_statement, (value,))
   rows = select_all(cursor, "SELECT token FROM keys WHERE userid = ?", (user["rowid"],))
   for row in rows:

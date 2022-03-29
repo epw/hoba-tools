@@ -213,7 +213,10 @@ class Hoba {
 	} else if (localStorage.getItem(this.STORAGE + this.S.PRIVKEY)) {
 	    if (this.user) {
 		ids_to_show = ["hoba-manage-button", "hoba-logout", "hoba-logout-immediate", "hoba-destroy",
-			       "hoba-sharing", "hoba-grant-new"];
+			       "hoba-sharing"];
+		if (this.user[".acl_create_account"]) {
+		    ids_to_show.push("hoba-grant-new");
+		}
 	    } else {
 		ids_to_show = ["hoba-login", "hoba-login-immediate"];
 	    }
