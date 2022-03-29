@@ -15,6 +15,15 @@ function logout() {
     HOBA.present_ui();
 }
 
+function new_user() {
+    const name = prompt("Name for new user:");
+    if (name == null) {
+	return null;
+    }
+    return {"description": name,
+	    "data": {"name": name}};
+}
+
 function manage_account() {
     HOBA.description = HOBA.user.name;
 }

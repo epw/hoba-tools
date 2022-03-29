@@ -51,24 +51,24 @@ const HOBA_UI = `
     <a id="hoba-new-account-page" href="index.html">New account page</a>
    </p>
  </div>
+ <div id="hoba-share">
+  <div class="hoba-identifier">
+    <div id="hoba-identifier-code"></div>
+  </div>
+  <div><div id="hoba-qr"></div></div>
+  <div><span>Link to share:</span> <input type="text" id="hoba-share-link" readonly>
+       <button type="button" id="hoba-copy-button" onclick="HOBA.copy_link()">Copy</button></div>
+  <div><button type="button" onclick="HOBA.share_link()">Share</button></div>
+ </div>
  <div id="hoba-sharing" class="hoba-ui-row">
   <p>
    <button type="button" onclick="HOBA.generate_share()">Link to Log In Elsewhere</button>
   </p>
+ </div>
  <div id="hoba-grant-new" class="hoba-ui-row">
   <p>
    <button type="button" onclick="HOBA.grant_new()">Grant Account</button>
   </p>
- </div>
-  <div id="hoba-share">
-   <div class="hoba-identifier">
-     <div id="hoba-identifier-code"></div>
-   </div>
-   <div><div id="hoba-qr"></div></div>
-   <div><span>Link to share:</span> <input type="text" id="hoba-share-link" readonly>
-        <button type="button" id="hoba-copy-button" onclick="HOBA.copy_link()">Copy</button></div>
-   <div><button type="button" onclick="HOBA.share_link()">Share</button></div>
-  </div>
  </div>
  <div id="hoba-create" class="hoba-ui-row">
   <p>
@@ -560,6 +560,11 @@ WARNING: If you do not have another browser logged in, you won't be able to reco
     }
 
     async grant_new() {
+	let new_user_data = {};
+	if ("newUser" in this.controls.dataset) {
+	    new_user_data = window[this.controls.dataset.newUser]() || new_user_data;
+	}
+
 	document.querySelector("#hoba-share").classList.add(this.CSS.SHOW);
 	
 	const field = document.getElementById("hoba-share-link");
@@ -567,8 +572,11 @@ WARNING: If you do not have another browser logged in, you won't be able to reco
 	const params = new URLSearchParams();
 	params.set("action", "confirm_bind");
 	params.set("redirect", location);
-	params.set("original_identifier", this.description);
-	const new_user = await this.api_call("?action=new_empty_account", null, "secret");
+	params.set("original_identifier", new_user_data.description);
+
+	const body = new FormData();
+	body.set("data", new_user_data.data);
+	const new_user = await this.api_call("?action=new_empty_account", body, "secret");
 	if (this.api_error(new_user, "Error generating secret.")) {
 	    return;
 	}
@@ -577,7 +585,7 @@ WARNING: If you do not have another browser logged in, you won't be able to reco
 	url.search = params;
 	field.value = url;
 
-	document.getElementById("hoba-identifier-code").textContent = this.description;
+	document.getElementById("hoba-identifier-code").textContent = new_user_data.description;
 
 	const qr = qrcode(0, "L");
 	qr.addData(url.toString());
