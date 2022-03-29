@@ -19,7 +19,7 @@ import traceback
 import hoba
 
 DB = "/var/local/eric/hoba.sqlite"
-ACL_CREATE_ACCOUNT_REQURIED = True
+ACL_CREATE_ACCOUNT_REQUIRED = True
 
 C = cookies.SimpleCookie(os.getenv("HTTP_COOKIE"))
 
@@ -73,7 +73,7 @@ def api(params):
   a = params.getfirst("action")
   public_id = params.getfirst("user")
   if a == "create":
-    if ACL_CREATE_ACCOUNT_REQURIED:
+    if ACL_CREATE_ACCOUNT_REQUIRED:
       hoba.output({"error": "Not authorized to create accounts"}, 403)
       return
     public_id = create_user(conn, params.getfirst("pubkey"))
@@ -143,7 +143,7 @@ def api(params):
       hoba.output({"error": "Not logged in", "user": C["user"].value, "token": C["token"].value}, 403)
       return
 
-    if ACL_CREATE_ACCOUNT_REQURIED and not old_user["acl_create_account"]:
+    if ACL_CREATE_ACCOUNT_REQUIRED and not old_user["acl_create_account"]:
       hoba.output({"error": "Not authorized to create accounts", "user": C["user"].value}, 403)
       return
     
@@ -170,9 +170,12 @@ def api(params):
       hoba.output({"empty": True})
     else:
       data = json.loads(user["data"])
-      data[".acl_create_account"] = not ACL_CREATE_ACCOUNT_REQURIED or user.get("acl_create_account", False)
+      data[".acl_create_account"] = not ACL_CREATE_ACCOUNT_REQUIRED or user.get("acl_create_account", False)
       hoba.output(data, 200)
 
+  elif a == "acls":
+    hoba.output({"create_account": not ACL_CREATE_ACCOUNT_REQUIRED})
+      
 def main():
   params = cgi.FieldStorage()
   try:

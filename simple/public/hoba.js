@@ -204,6 +204,10 @@ class Hoba {
 	this.update_ui();
     }
 
+    show_ids(ids) {
+	ids.map(id => this.safe_css_class_add(id, this.CSS.SHOW));
+    }
+    
     update_ui() {
 	this.clear_error();
 	Array.from(document.querySelectorAll(".hoba-ui-row, .hoba-immediate-button")).map(el => el.classList.remove(this.CSS.SHOW));
@@ -221,9 +225,13 @@ class Hoba {
 		ids_to_show = ["hoba-login", "hoba-login-immediate"];
 	    }
 	} else {
-	    ids_to_show = ["hoba-create", "hoba-create-immediate"];
+	    this.api_call("?action=acls").then(acls => {
+		if (acls.create_account) {
+		    this.show_ids(["hoba-create", "hoba-create-immediate"]);
+		}
+	    });
 	}
-	ids_to_show.map(id => this.safe_css_class_add(id, this.CSS.SHOW));
+	this.show_ids(ids_to_show);
     }
     
     loaded() {
