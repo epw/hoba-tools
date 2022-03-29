@@ -62,7 +62,8 @@ def create_user(conn, pubkey):
       public_id = None
   cursor.execute("INSERT INTO users (public_id, data) VALUES (?, ?)", (public_id, "null"))
   userid = cursor.lastrowid
-  save_pubkey(conn, userid, pubkey)
+  if public_id is not None:
+    save_pubkey(conn, userid, pubkey)
   return public_id
 
 def api(params):
@@ -72,6 +73,9 @@ def api(params):
   a = params.getfirst("action")
   public_id = params.getfirst("user")
   if a == "create":
+    if ACL_CREATE_ACCOUNT_REQURIED:
+      hoba.output({"error": "Not authorized to create accounts"}, 403)
+      return
     public_id = create_user(conn, params.getfirst("pubkey"))
     hoba.output({"id": public_id})
   elif a == "challenge":
@@ -146,10 +150,13 @@ def api(params):
     public_id = create_user(conn, None)
     secret = generate_secret()
     expiry = datetime.now() + timedelta(days=1)
-    cursor.execute("UPDATE users SET new_browser_secret = ?, new_browser_secret_expiry = ?, old_browser_identifier = ? WHERE rowid = ?",
-                   (secret, expiry, params.getfirst("origin_identifier"), user["rowid"]))
+    cursor.execute("UPDATE users SET new_browser_secret = ?, new_browser_secret_expiry = ?, old_browser_identifier = ? WHERE public_id = ?",
+                   (secret, expiry, params.getfirst("origin_identifier"), public_id))
+    user_data = params.getfirst("data")
+    if user_data:
+      cursor.execute("UPDATE users SET data = ? WHERE public_id = ?", (user_data, public_id))
     conn.commit()
-    hoba.output({"secret": secret})
+    hoba.output({"user": public_id, "secret": secret})
 
   elif a == "retrieve":
     if "token" not in C:
@@ -162,7 +169,9 @@ def api(params):
     if user["data"] == "null":
       hoba.output({"empty": True})
     else:
-      hoba.output(user["data"], 200, True)
+      data = json.loads(user["data"])
+      data[".acl_create_account"] = not ACL_CREATE_ACCOUNT_REQURIED or user.get("acl_create_account", False)
+      hoba.output(data, 200)
 
 def main():
   params = cgi.FieldStorage()

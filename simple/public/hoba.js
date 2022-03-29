@@ -55,6 +55,11 @@ const HOBA_UI = `
   <p>
    <button type="button" onclick="HOBA.generate_share()">Link to Log In Elsewhere</button>
   </p>
+ <div id="hoba-grant-new" class="hoba-ui-row">
+  <p>
+   <button type="button" onclick="HOBA.grant_new()">Grant Account</button>
+  </p>
+ </div>
   <div id="hoba-share">
    <div class="hoba-identifier">
      <div id="hoba-identifier-code"></div>
@@ -208,7 +213,7 @@ class Hoba {
 	} else if (localStorage.getItem(this.STORAGE + this.S.PRIVKEY)) {
 	    if (this.user) {
 		ids_to_show = ["hoba-manage-button", "hoba-logout", "hoba-logout-immediate", "hoba-destroy",
-			       "hoba-sharing"];
+			       "hoba-sharing", "hoba-grant-new"];
 	    } else {
 		ids_to_show = ["hoba-login", "hoba-login-immediate"];
 	    }
@@ -543,6 +548,32 @@ WARNING: If you do not have another browser logged in, you won't be able to reco
 	    return;
 	}
 	params.set("secret", secret.secret);
+	url.search = params;
+	field.value = url;
+
+	document.getElementById("hoba-identifier-code").textContent = this.description;
+
+	const qr = qrcode(0, "L");
+	qr.addData(url.toString());
+	qr.make();
+	document.getElementById("hoba-qr").innerHTML = qr.createImgTag(5);
+    }
+
+    async grant_new() {
+	document.querySelector("#hoba-share").classList.add(this.CSS.SHOW);
+	
+	const field = document.getElementById("hoba-share-link");
+	const url = new URL(this.options.api, location);
+	const params = new URLSearchParams();
+	params.set("action", "confirm_bind");
+	params.set("redirect", location);
+	params.set("original_identifier", this.description);
+	const new_user = await this.api_call("?action=new_empty_account", null, "secret");
+	if (this.api_error(new_user, "Error generating secret.")) {
+	    return;
+	}
+	params.set("user", new_user.user);
+	params.set("secret", new_user.secret);
 	url.search = params;
 	field.value = url;
 
