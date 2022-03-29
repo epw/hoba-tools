@@ -575,7 +575,7 @@ WARNING: If you do not have another browser logged in, you won't be able to reco
 	params.set("original_identifier", new_user_data.description);
 
 	const body = new FormData();
-	body.set("data", new_user_data.data);
+	body.set("data", JSON.stringify(new_user_data.data));
 	const new_user = await this.api_call("?action=new_empty_account", body, "secret");
 	if (this.api_error(new_user, "Error generating secret.")) {
 	    return;
