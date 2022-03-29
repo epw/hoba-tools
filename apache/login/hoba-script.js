@@ -38,7 +38,7 @@ async function create_user() {
     localStorage.setItem(STORAGE + S.PUBKEY, public_key);
     const form = new FormData();
     form.set("pubkey", public_key);
-    const res = await fetch("/hoba.cgi?action=create", {
+    const res = await fetch("/hoba-form.cgi?action=create", {
 	method: "POST",
 	body: form
     });
@@ -69,7 +69,7 @@ async function sign_challenge(keydata) {
 	["sign"]);
     const form = new FormData();
     form.set("pubkey", localStorage.getItem(STORAGE + S.PUBKEY));
-    const res = await fetch("/hoba.cgi?action=challenge", {
+    const res = await fetch("/hoba-form.cgi?action=challenge", {
 	method: "POST",
 	body: form
     });
@@ -82,7 +82,7 @@ async function sign_challenge(keydata) {
     let signature = await crypto.subtle.sign(KEY_ALG, private_key, encoder.encode(challenge.value));
     signature = buf2hex(signature);
     form.set("signature", signature);
-    const token_res = await fetch("/hoba.cgi?action=token", {
+    const token_res = await fetch("/hoba-form.cgi?action=token", {
 	method: "POST",
 	body: form
     });

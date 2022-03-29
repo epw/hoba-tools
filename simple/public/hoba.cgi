@@ -19,6 +19,7 @@ import traceback
 import hoba
 
 DB = "/var/local/eric/hoba.sqlite"
+ACL_CREATE_ACCOUNT_REQURIED = False
 
 C = cookies.SimpleCookie(os.getenv("HTTP_COOKIE"))
 
@@ -50,7 +51,20 @@ def save_pubkey(conn, userid, pubkey):
   cursor = conn.cursor()
   cursor.execute("INSERT INTO keys (userid, pubkey) VALUES (?, ?)", (userid, pubkey))
   conn.commit()
-  
+
+def create_user(conn, pubkey):
+  cursor = conn.cursor()
+  public_id = None
+  while public_id is None:
+    public_id = random.randint(0, 100000)
+    row = hoba.select(cursor, "SELECT rowid FROM users WHERE public_id = ?", (public_id,))
+    if row is not None:
+      public_id = None
+  cursor.execute("INSERT INTO users (public_id, data) VALUES (?, ?)", (public_id, "null"))
+  userid = cursor.lastrowid
+  save_pubkey(conn, userid, pubkey)
+  return public_id
+
 def api(params):
   conn = hoba.connect(DB)
   cursor = conn.cursor()
@@ -58,15 +72,7 @@ def api(params):
   a = params.getfirst("action")
   public_id = params.getfirst("user")
   if a == "create":
-    public_id = None
-    while public_id is None:
-      public_id = random.randint(0, 100000)
-      row = hoba.select(cursor, "SELECT rowid FROM users WHERE public_id = ?", (public_id,))
-      if row is not None:
-        public_id = None
-    cursor.execute("INSERT INTO users (public_id, data) VALUES (?, ?)", (public_id, "null"))
-    userid = cursor.lastrowid
-    save_pubkey(conn, userid, params.getfirst("pubkey"))
+    public_id = create_user(conn, params.getfirst("pubkey"))
     hoba.output({"id": public_id})
   elif a == "challenge":
     challenge = generate_secret()
@@ -102,7 +108,7 @@ def api(params):
     cursor.execute("UPDATE users SET new_browser_secret = ?, new_browser_secret_expiry = ?, old_browser_identifier = ? WHERE rowid = ?",
                    (secret, expiry, params.getfirst("origin_identifier"), user["rowid"]))
     conn.commit()
-    hoba.output({"secret": secret});
+    hoba.output({"secret": secret})
   elif a == "confirm_bind":
     public_id = params.getfirst("user")
     user = hoba.select(cursor, "SELECT new_browser_secret FROM users WHERE public_id = ?", (public_id,))
@@ -126,7 +132,25 @@ def api(params):
     cursor.execute("UPDATE users SET new_browser_secret = NULL WHERE rowid = ?", (user["rowid"],))
     conn.commit()
     hoba.output({"id": public_id})
+
+  elif a == "new_empty_account":
+    old_user = hoba.get_user(DB, C["user"].value, C["token"].value)
+    if not old_user:
+      hoba.output({"error": "Not logged in", "user": C["user"].value, "token": C["token"].value}, 403)
+      return
+
+    if ACL_CREATE_ACCOUNT_REQURIED and not old_user["acl_create_account"]:
+      hoba.output({"error": "Not authorized to create accounts", "user": C["user"].value}, 403)
+      return
     
+    public_id = create_user(conn, None)
+    secret = generate_secret()
+    expiry = datetime.now() + timedelta(days=1)
+    cursor.execute("UPDATE users SET new_browser_secret = ?, new_browser_secret_expiry = ?, old_browser_identifier = ? WHERE rowid = ?",
+                   (secret, expiry, params.getfirst("origin_identifier"), user["rowid"]))
+    conn.commit()
+    hoba.output({"secret": secret})
+
   elif a == "retrieve":
     if "token" not in C:
       hoba.output({"error": "Not logged in", "user": C["user"].value}, 403)

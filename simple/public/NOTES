@@ -22,12 +22,6 @@ Later nice-to-haves:
 - Offer login link as:
   - blank for email to send to (also save email with account)
     - Warn you need to get the email right, whoever gets this will be able to log in as you forever!
-- Support non-public account creation
-  - No "Create Account" button in UI
-  - Button like the standard one to login a new brwoser, but is for account generation instead
-  - Probably looks like a new user row with a secret but no associated public keys
-  - So it's possible to present the secret and a new public key, and that fills in the account
-  - Need to figure out ACLs (can I make it so only I can give out accounts on my server, but for another server, anyone with an account could invite someone?)
 - When share-generation button is clicked, produce a new, short URL that could be hand-typed
   - As long as the dialog is open, short URL works. Delete when it's closed
   - Visiting the URL gives a button to ask to bind accounts, like normal
@@ -49,6 +43,12 @@ hoba.js: Library to include on any page that needs to do AJAX calls for the auth
 hoba.cgi: Server side of account management and authentication. Calls out to hoba.py for lowest level, but implements key logic, challenges, and establishing tokens.
 
 MVP TODO
+- Support non-public account creation
+  - No "Create Account" button in UI
+  - Button like the standard one to login a new brwoser, but is for account generation instead
+  - Probably looks like a new user row with a secret but no associated public keys
+  - So it's possible to present the secret and a new public key, and that fills in the account
+  - Need to figure out ACLs (can I make it so only I can give out accounts on my server, but for another server, anyone with an account could invite someone?)
 - Switch from localStorage to indexeddb for (at least) private key
 - Test by copying essential files (should just be three) to a new project directory, maybe on a new computer
 - Write documentation explaining hoba.cgi state machine
