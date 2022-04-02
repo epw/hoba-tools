@@ -154,6 +154,7 @@ class Hoba {
 	this.S = {
 	    PRIVKEY: "priv_key",
 	    PUBKEY: "pub_key",
+	    HAS_PRIVKEY: "has_priv_key",
 	    USER: "user",
 	    AUTO: "auto",
 	};
@@ -172,9 +173,6 @@ class Hoba {
 	    await new_store.transaction;
 	    const hoba_store = db.transaction(this.OBJECTS, "readwrite").objectStore(this.OBJECTS);
 	    hoba_store.put(null, this.S.PRIVKEY);
-	    hoba_store.put(null, this.S.PUBKEY);
-	    hoba_store.put(null, this.S.USER);
-	    hoba_store.put(false, this.S.AUTO);
 	};
 	
 	// Events other scripts can listen for on <body>
@@ -247,7 +245,7 @@ class Hoba {
 	let ids_to_show = [];
 	if (this.url_params.get("secret")) {
 	    ids_to_show = ["hoba-bind"];
-	} else if (localStorage.getItem(this.STORAGE + this.S.PRIVKEY)) {
+	} else if (localStorage.getItem(this.STORAGE + this.S.HAS_PRIVKEY)) {
 	    if (this.user) {
 		ids_to_show = ["hoba-manage-button", "hoba-logout", "hoba-logout-immediate", "hoba-destroy",
 			       "hoba-sharing"];
@@ -275,7 +273,12 @@ class Hoba {
 
     // DB management
     async db_get(key) {
-	return this.db.transaction(this.OBJECTS).objectStore(this.OBJECTS).get(key);
+	const promise = new Promise(resolve =>
+				    this.db.transaction(this.OBJECTS)
+				    .objectStore(this.OBJECTS).get(key).onsuccess = e => {
+					resolve(e.target.result);
+				    });
+	return promise;
     }
     async db_set(key, value) {
 	return this.db.transaction(this.OBJECTS, "readwrite").objectStore(this.OBJECTS).put(value, key);
@@ -382,16 +385,13 @@ class Hoba {
     // for new and preexisting accounts respectively.
     async new_keypair() {
 	const keypair = await crypto.subtle.generateKey(this.KEY_ALG, true, ["sign", "verify"]);
-	const private_key = await crypto.subtle.exportKey(this.PRIV_KEY_EXPORT_FORMAT, keypair.privateKey);
-	const priv_buf = new Uint8Array(private_key);
 	this.db_set(this.S.PRIVKEY, keypair.privateKey);
-	localStorage.setItem(this.STORAGE + this.S.PRIVKEY, priv_buf);
+	localStorage.setItem(this.STORAGE + this.S.HAS_PRIVKEY, "true");
 
 	// We only ever need the public key as a string, not a SubtleCrypto object,
 	// so store the converted string for convenience.
 	const public_key = await this.get_pem(keypair.publicKey);
 	localStorage.setItem(this.STORAGE + this.S.PUBKEY, public_key);
-	this.db_set(this.S.PUBKEY, public_key);
 
 	return public_key;
     }
@@ -407,7 +407,6 @@ class Hoba {
 	    return;
 	}
 	localStorage.setItem(this.STORAGE + this.S.USER, body["id"])
-	await this.db_set(this.S.USER, body["id"]);
 	this.set_cookie("user", body["id"]);
 	console.log("User created");
 	this.update_ui();
@@ -428,19 +427,13 @@ class Hoba {
 	    return;
 	}
 	localStorage.setItem(this.STORAGE + this.S.USER, body["id"])
-	await this.db_set(this.S.USER, body["id"]);
 	this.set_cookie("user", body["id"]);
 	console.log("User created");
 	this.login();
     }
     
     async sign_challenge(challenge) {
-	const private_key = await crypto.subtle.importKey(
-	    this.PRIV_KEY_EXPORT_FORMAT,
-	    new Uint8Array(localStorage.getItem(this.STORAGE + this.S.PRIVKEY).split(",")),
-	    this.KEY_ALG,
-	    true,
-	    ["sign"]);
+	const private_key = await this.db_get(this.S.PRIVKEY);
 	const signature = await crypto.subtle.sign(this.KEY_ALG, private_key, this.encoder.encode(challenge));
 	return this.buf2hex(signature);
     }
@@ -483,7 +476,7 @@ class Hoba {
     }
 
     async login() {
-	if (!localStorage.getItem(this.STORAGE + this.S.PRIVKEY)) {
+	if (!localStorage.getItem(this.STORAGE + this.S.HAS_PRIVKEY)) {
 	    console.error("Can't login before user has been created.");
 	    this.show_error("<p>Can't login before user has been created.</p><p><a href='#' onclick='location.reload()'>Reload if Create Account button is not visible.</a></p>");
 	    this.present_ui();
@@ -491,7 +484,6 @@ class Hoba {
 	}
 
 	localStorage.setItem(this.STORAGE + this.S.AUTO, "true");
-	this.db_set(this.S.AUTO, true);
 
 	const user_id = localStorage.getItem(this.STORAGE + this.S.USER);
 	
@@ -529,7 +521,6 @@ class Hoba {
 	this.clear_cookie("token");
 	this.user = null;
 	localStorage.setItem(this.STORAGE + this.S.AUTO, "false");
-	this.db_set(this.S.AUTO, false);
 	this.close_dialog();
 	this.update_ui();
 	this.send_logout_event();
@@ -539,10 +530,10 @@ class Hoba {
 	for (let cookie of ["token", "user"]) {
 	    this.clear_cookie(cookie);
 	}
-	for (let field of [this.S.USER, this.S.PUBKEY, this.S.PRIVKEY, this.S.AUTO]) {
+	for (let field of [this.S.USER, this.S.PUBKEY, this.S.HAS_PRIVKEY, this.S.AUTO]) {
 	    localStorage.removeItem(this.STORAGE + field);
-	    await this.db_remove(field);
 	}
+	this.db_remove(this.S.PRIVKEY);
     }
     
     async destroy() {
@@ -691,7 +682,7 @@ WARNING: If you do not have another browser logged in, you won't be able to reco
     }
     
     async auto_login() {
-	if (!localStorage.getItem(this.STORAGE + this.S.PRIVKEY)
+	if (!localStorage.getItem(this.STORAGE + this.S.HAS_PRIVKEY)
 	    || localStorage.getItem(this.STORAGE + this.S.AUTO) == "false") {
 	    this.present_ui();
 	    return;
