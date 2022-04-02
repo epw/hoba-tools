@@ -1,4 +1,17 @@
 // Template HTML is at the top of the file, even though that means it's outside of the HOBA.* namespace
+
+function db_values() {
+    let values = {};
+    HOBA.db.transaction(HOBA.OBJECTS).objectStore(HOBA.OBJECTS).openCursor().onsuccess = e => {
+	let cursor = e.target.result;
+	if (cursor) {
+            values[cursor.key] = cursor.value;
+            cursor.continue();
+	}
+    };
+    return values;
+}
+
 const HOBA_UI = `
 <style>
 #hoba .hoba-ui-row {
@@ -134,22 +147,7 @@ class Hoba {
 	    SHOW: "hoba-show",
 	};
 
-	this.db = null;
-	const db_request = indexedDB.open("hoba", 1);
-	db_request.onerror = e => {
-	    console.log("Error creating indexedDB:", db_request.errorCode, e);
-	};
-	db_request.onsuccess = e => {
-	    this.db = e.target.result;
-	};
-	db_request.onupgradeneeded = async (e) => {
-	    const db = e.target.result;
-	    const new_store = db.createObjectStore("hoba");
-	    await new_store.transaction;
-	    const hoba_store = db.transaction("hoba", "readwrite").objectStore("hoba");
-	    hoba_store.put(null, this.S.PRIVKEY);
-	};
-	
+	this.OBJECTS = "hoba";
 	// Give localStorage its own "namespace" to stay separate from other scripts on the same server.
 	this.STORAGE = ".hoba.";
 	// Assign constants so keys can be program-recognized, not just strings
@@ -160,6 +158,25 @@ class Hoba {
 	    AUTO: "auto",
 	};
 
+	this.db = null;
+	const db_request = indexedDB.open("hoba", 1);
+	db_request.onerror = e => {
+	    console.log("Error creating indexedDB:", db_request.errorCode, e);
+	};
+	db_request.onsuccess = e => {
+	    this.db = e.target.result;
+	};
+	db_request.onupgradeneeded = async (e) => {
+	    const db = e.target.result;
+	    const new_store = db.createObjectStore(this.OBJECTS);
+	    await new_store.transaction;
+	    const hoba_store = db.transaction(this.OBJECTS, "readwrite").objectStore(this.OBJECTS);
+	    hoba_store.put(null, this.S.PRIVKEY);
+	    hoba_store.put(null, this.S.PUBKEY);
+	    hoba_store.put(null, this.S.USER);
+	    hoba_store.put(false, this.S.AUTO);
+	};
+	
 	// Events other scripts can listen for on <body>
 	this.EVENTS = {
 	    LOGIN: "LOGIN",
@@ -254,6 +271,17 @@ class Hoba {
 	this.get_params();
 	this.attach_ui();
 	this.auto_login();
+    }
+
+    // DB management
+    async db_get(key) {
+	return this.db.transaction(this.OBJECTS).objectStore(this.OBJECTS).get(key);
+    }
+    async db_set(key, value) {
+	return this.db.transaction(this.OBJECTS, "readwrite").objectStore(this.OBJECTS).put(value, key);
+    }
+    async db_remove(key) {
+	return this.db.transaction(this.OBJECTS, "readwrite").objectStore(this.OBJECTS).delete(key);
     }
     
     // Cookie management
@@ -356,11 +384,14 @@ class Hoba {
 	const keypair = await crypto.subtle.generateKey(this.KEY_ALG, true, ["sign", "verify"]);
 	const private_key = await crypto.subtle.exportKey(this.PRIV_KEY_EXPORT_FORMAT, keypair.privateKey);
 	const priv_buf = new Uint8Array(private_key);
-	this.db.transaction("hoba", "readwrite").objectStore("hoba").put(keypair.privateKey, this.S.PRIVKEY);
+	this.db_set(this.S.PRIVKEY, keypair.privateKey);
 	localStorage.setItem(this.STORAGE + this.S.PRIVKEY, priv_buf);
 
+	// We only ever need the public key as a string, not a SubtleCrypto object,
+	// so store the converted string for convenience.
 	const public_key = await this.get_pem(keypair.publicKey);
 	localStorage.setItem(this.STORAGE + this.S.PUBKEY, public_key);
+	this.db_set(this.S.PUBKEY, public_key);
 
 	return public_key;
     }
@@ -376,6 +407,7 @@ class Hoba {
 	    return;
 	}
 	localStorage.setItem(this.STORAGE + this.S.USER, body["id"])
+	await this.db_set(this.S.USER, body["id"]);
 	this.set_cookie("user", body["id"]);
 	console.log("User created");
 	this.update_ui();
@@ -396,6 +428,7 @@ class Hoba {
 	    return;
 	}
 	localStorage.setItem(this.STORAGE + this.S.USER, body["id"])
+	await this.db_set(this.S.USER, body["id"]);
 	this.set_cookie("user", body["id"]);
 	console.log("User created");
 	this.login();
@@ -458,6 +491,7 @@ class Hoba {
 	}
 
 	localStorage.setItem(this.STORAGE + this.S.AUTO, "true");
+	this.db_set(this.S.AUTO, true);
 
 	const user_id = localStorage.getItem(this.STORAGE + this.S.USER);
 	
@@ -493,18 +527,21 @@ class Hoba {
 
     logout() {
 	this.clear_cookie("token");
+	this.user = null;
 	localStorage.setItem(this.STORAGE + this.S.AUTO, "false");
+	this.db_set(this.S.AUTO, false);
 	this.close_dialog();
+	this.update_ui();
 	this.send_logout_event();
-	location.reload();
     }
 
-    clear_user() {
+    async clear_user() {
 	for (let cookie of ["token", "user"]) {
 	    this.clear_cookie(cookie);
 	}
 	for (let field of [this.S.USER, this.S.PUBKEY, this.S.PRIVKEY, this.S.AUTO]) {
 	    localStorage.removeItem(this.STORAGE + field);
+	    await this.db_remove(field);
 	}
     }
     
@@ -514,8 +551,8 @@ WARNING: If you do not have another browser logged in, you won't be able to reco
 	if (!confirmation) {
 	    return;
 	}
+	await this.clear_user();
 	this.logout();
-	this.clear_user();
     }
 
     close_dialog() {
