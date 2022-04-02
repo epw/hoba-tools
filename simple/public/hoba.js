@@ -134,6 +134,22 @@ class Hoba {
 	    SHOW: "hoba-show",
 	};
 
+	this.db = null;
+	const db_request = indexedDB.open("hoba", 1);
+	db_request.onerror = e => {
+	    console.log("Error creating indexedDB:", db_request.errorCode, e);
+	};
+	db_request.onsuccess = e => {
+	    this.db = e.target.result;
+	};
+	db_request.onupgradeneeded = async (e) => {
+	    const db = e.target.result;
+	    const new_store = db.createObjectStore("hoba");
+	    await new_store.transaction;
+	    const hoba_store = db.transaction("hoba", "readwrite").objectStore("hoba");
+	    hoba_store.put(null, this.S.PRIVKEY);
+	};
+	
 	// Give localStorage its own "namespace" to stay separate from other scripts on the same server.
 	this.STORAGE = ".hoba.";
 	// Assign constants so keys can be program-recognized, not just strings
@@ -340,6 +356,7 @@ class Hoba {
 	const keypair = await crypto.subtle.generateKey(this.KEY_ALG, true, ["sign", "verify"]);
 	const private_key = await crypto.subtle.exportKey(this.PRIV_KEY_EXPORT_FORMAT, keypair.privateKey);
 	const priv_buf = new Uint8Array(private_key);
+	this.db.transaction("hoba", "readwrite").objectStore("hoba").put(keypair.privateKey, this.S.PRIVKEY);
 	localStorage.setItem(this.STORAGE + this.S.PRIVKEY, priv_buf);
 
 	const public_key = await this.get_pem(keypair.publicKey);

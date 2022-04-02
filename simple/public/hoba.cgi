@@ -19,7 +19,7 @@ import traceback
 import hoba
 
 DB = "/var/local/eric/hoba.sqlite"
-ACL_CREATE_ACCOUNT_REQUIRED = True
+ACL_CREATE_ACCOUNT_REQUIRED = False
 
 C = cookies.SimpleCookie(os.getenv("HTTP_COOKIE"))
 
