@@ -1,21 +1,24 @@
+from http import cookies
 import json
 import os
 import sqlite3
 import sys
 
-def connect(db):
-  needs_init = False
-  if not os.path.exists(db):
-    needs_init = True
+COOKIE_USER = "_hoba_user"
+COOKIE_TOKEN = "_hoba_token"
 
+def connect(db):
+  if not os.path.exists(db):
+    return None
   conn = sqlite3.connect(db)
   conn.row_factory = sqlite3.Row
-  if needs_init:
-    cursor = conn.cursor()
-    with open("schema.sql") as f:
-      cursor.executescript(f.read())
-
   return conn
+
+# Only set up to be used in development
+def init_db(conn):
+  cursor = conn.cursor()
+  with open("schema.sql") as f:
+    cursor.executescript(f.read())
 
 def select(cursor, statement, *args):
   cursor.execute(statement, *args)
@@ -38,6 +41,8 @@ def get_user_identified(db, token, rowid=None, public_id=None):
     value = rowid
   select_statement = "SELECT rowid, public_id, data, acl_create_account FROM users WHERE {} = ?".format(selector)
   user = select(cursor, select_statement, (value,))
+  if user is None:
+    return None
   rows = select_all(cursor, "SELECT token FROM keys WHERE userid = ?", (user["rowid"],))
   for row in rows:
     if row and row["token"] == token:
@@ -49,6 +54,12 @@ def get_user(db, public_id, token):
 
 def get_user_rowid(db, rowid, token):
   return get_user_identified(db, token, rowid=rowid)
+
+def check_user(db):
+  C = cookies.SimpleCookie(os.getenv("HTTP_COOKIE"))
+  if (not COOKIE_USER in C) or (not COOKIE_TOKEN in C):
+    return None
+  return get_user(db, C[COOKIE_USER].value, C[COOKIE_TOKEN].value)
 
 # Convenience function for JSON CGI output. Also helpful for other scripts that use the same structure.
 def output(data, status=200, force_str=False):

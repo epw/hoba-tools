@@ -30,6 +30,7 @@ Later nice-to-haves:
   - If agreed on the old browser, then the new one is given a secret and binds as usual
   - Don't give the secret until approved, otherwise JavaScript vulnerability
   - I guess this means you need some websockets? Or you could poll once every few seconds, since it's only needed while these windows are open
+- Support multiple accounts
 - Support passwords that generate private keys, for portable logins
 - "Advanced menu" for when you know what you're doing and something under the hood is wrong
   - Import keypair directly from .pem files

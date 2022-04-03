@@ -18,8 +18,12 @@ import traceback
 
 import hoba
 
-DB = "/var/local/eric/hoba.sqlite"
-ACL_CREATE_ACCOUNT_REQUIRED = False
+DB = "hoba.sqlite"
+ACL_CREATE_ACCOUNT_REQUIRED = True
+try:
+  from hoba_config import *
+except ModuleNotFoundError:
+  pass
 
 C = cookies.SimpleCookie(os.getenv("HTTP_COOKIE"))
 
@@ -103,9 +107,9 @@ def api(params):
     hoba.output({"token": token})
 
   elif a == "browser_secret":
-    user = hoba.get_user(DB, C["user"].value, C["token"].value)
+    user = hoba.get_user(DB, C[hoba.COOKIE_USER].value, C[hoba.COOKIE_TOKEN].value)
     if not user:
-      hoba.output({"error": "Not logged in", "user": C["user"].value, "token": C["token"].value}, 403)
+      hoba.output({"error": "Not logged in", "user": C[hoba.COOKIE_USER].value, "token": C[hoba.COOKIE_TOKEN].value}, 403)
       return
     secret = generate_secret()
     expiry = datetime.now() + timedelta(days=1)
@@ -138,13 +142,13 @@ def api(params):
     hoba.output({"id": public_id})
 
   elif a == "new_empty_account":
-    old_user = hoba.get_user(DB, C["user"].value, C["token"].value)
+    old_user = hoba.get_user(DB, C[hoba.COOKIE_USER].value, C[hoba.COOKIE_TOKEN].value)
     if not old_user:
-      hoba.output({"error": "Not logged in", "user": C["user"].value, "token": C["token"].value}, 403)
+      hoba.output({"error": "Not logged in", "user": C[hoba.COOKIE_USER].value, "token": C[hoba.COOKIE_TOKEN].value}, 403)
       return
 
     if ACL_CREATE_ACCOUNT_REQUIRED and not old_user["acl_create_account"]:
-      hoba.output({"error": "Not authorized to create accounts", "user": C["user"].value}, 403)
+      hoba.output({"error": "Not authorized to create accounts", "user": C[hoba.COOKIE_USER].value}, 403)
       return
     
     public_id = create_user(conn, None)
@@ -159,12 +163,12 @@ def api(params):
     hoba.output({"user": public_id, "secret": secret})
 
   elif a == "retrieve":
-    if "token" not in C:
-      hoba.output({"error": "Not logged in", "user": C["user"].value}, 403)
+    if hoba.COOKIE_TOKEN not in C:
+      hoba.output({"error": "Not logged in", "user": C[hoba.COOKIE_USER].value}, 403)
       return
-    user = hoba.get_user(DB, C["user"].value, C["token"].value)
+    user = hoba.get_user(DB, C[hoba.COOKIE_USER].value, C[hoba.COOKIE_TOKEN].value)
     if not user:
-      hoba.output({"error": "Not logged in", "user": C["user"].value, "token": C["token"].value}, 403)
+      hoba.output({"error": "Not logged in", "user": C[hoba.COOKIE_USER].value, "token": C[hoba.COOKIE_TOKEN].value}, 403)
       return
     if user["data"] == "null":
       hoba.output({"empty": True})

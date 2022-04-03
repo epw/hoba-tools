@@ -1,17 +1,4 @@
 // Template HTML is at the top of the file, even though that means it's outside of the HOBA.* namespace
-
-function db_values() {
-    let values = {};
-    HOBA.db.transaction(HOBA.OBJECTS).objectStore(HOBA.OBJECTS).openCursor().onsuccess = e => {
-	let cursor = e.target.result;
-	if (cursor) {
-            values[cursor.key] = cursor.value;
-            cursor.continue();
-	}
-    };
-    return values;
-}
-
 const HOBA_UI = `
 <style>
 #hoba .hoba-ui-row {
@@ -143,14 +130,21 @@ class Hoba {
 
 	this.url_params = new URLSearchParams(location.search);
 
+	// Assign constants so keys can be program-recognized, not just strings
+
 	this.CSS = {
 	    SHOW: "hoba-show",
 	};
 
+	// Keep these constants equal to values in hoba.py
+	this.COOKIE = {
+	    USER: "_hoba_user",
+	    TOKEN: "_hoba_token"
+	};
+	
 	this.OBJECTS = "hoba";
 	// Give localStorage its own "namespace" to stay separate from other scripts on the same server.
 	this.STORAGE = ".hoba.";
-	// Assign constants so keys can be program-recognized, not just strings
 	this.S = {
 	    PRIVKEY: "priv_key",
 	    PUBKEY: "pub_key",
@@ -407,7 +401,7 @@ class Hoba {
 	    return;
 	}
 	localStorage.setItem(this.STORAGE + this.S.USER, body["id"])
-	this.set_cookie("user", body["id"]);
+	this.set_cookie(this.COOKIE.USER, body["id"]);
 	console.log("User created");
 	this.update_ui();
 	this.login();
@@ -427,7 +421,7 @@ class Hoba {
 	    return;
 	}
 	localStorage.setItem(this.STORAGE + this.S.USER, body["id"])
-	this.set_cookie("user", body["id"]);
+	this.set_cookie(this.COOKIE.USER, body["id"]);
 	console.log("User created");
 	this.login();
     }
@@ -503,8 +497,8 @@ class Hoba {
 	if (this.api_error(token, "Failed challenge signing, required to log in.")) {
 	    return;
 	}
-	this.set_cookie("user", user_id);
-	this.set_cookie("token", token.token);
+	this.set_cookie(this.COOKIE.USER, user_id);
+	this.set_cookie(this.COOKIE.TOKEN, token.token);
 	console.log("Token established:", token);
 	document.getElementById("hoba").close();
 	await this.get_user();
@@ -518,7 +512,7 @@ class Hoba {
     }
 
     logout() {
-	this.clear_cookie("token");
+	this.clear_cookie(this.COOKIE.TOKEN);
 	this.user = null;
 	localStorage.setItem(this.STORAGE + this.S.AUTO, "false");
 	this.close_dialog();
@@ -527,7 +521,7 @@ class Hoba {
     }
 
     async clear_user() {
-	for (let cookie of ["token", "user"]) {
+	for (let cookie of [this.COOKIE.USER, this.COOKIE.TOKEN]) {
 	    this.clear_cookie(cookie);
 	}
 	for (let field of [this.S.USER, this.S.PUBKEY, this.S.HAS_PRIVKEY, this.S.AUTO]) {
@@ -596,7 +590,7 @@ WARNING: If you do not have another browser logged in, you won't be able to reco
 	const url = new URL(this.options.api, location);
 	const params = new URLSearchParams();
 	params.set("action", "confirm_bind");
-	params.set("user", this.get_cookie("user"));
+	params.set("user", this.get_cookie(this.COOKIE.USER));
 	params.set("redirect", location);
 	params.set("original_identifier", this.description);
 	const secret = await this.api_call("?action=browser_secret", null, "secret");
