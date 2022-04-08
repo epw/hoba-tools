@@ -125,6 +125,7 @@ class Hoba {
 	this.options = {
 	    "api": null,
 	    "unique_ui": false,
+	    "path": "/",
 	};
 	this.controls = null;
 
@@ -298,10 +299,10 @@ class Hoba {
 	}
     }
     set_cookie(name, value) {
-	document.cookie = name + "=" + value;
+	document.cookie = `${name}=${value}; Path=${this.options.path}`;
     }
     clear_cookie(name) {
-	document.cookie = name + "=; Max-Age=0"
+	document.cookie = name + `=; Path=${this.options.path}; Max-Age=0`;
     }
 
     // Helper functions for processing keys 
