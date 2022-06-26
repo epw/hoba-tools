@@ -4,8 +4,18 @@ import os
 import sqlite3
 import sys
 
+# HOBA constants
+
 COOKIE_USER = "_hoba_user"
 COOKIE_TOKEN = "_hoba_token"
+
+# Constants used in dependent systems
+CONFIG_FILE = ".hoba"
+CONFIG_DEFAULTS = {
+  "db": "/dev/null",
+  "login": "/login.html"
+}
+
 
 def connect(db):
   if not os.path.exists(db):
@@ -60,6 +70,23 @@ def check_user(db):
   if (not COOKIE_USER in C) or (not COOKIE_TOKEN in C):
     return None
   return get_user(db, C[COOKIE_USER].value, C[COOKIE_TOKEN].value)
+
+# Logic to support CGI programs across systems
+
+def get_config():
+  config = CONFIG_DEFAULTS.copy()
+  if os.path.exists(CONFIG_FILE):
+    with open(CONFIG_FILE) as f:
+      config.update(json.load(f))
+  else:
+    raise FileNotFoundError(f"No config file found at '{CONFIG_FILE}'")
+  return config
+
+def authenticated():
+  config = get_config()
+  db = connect(config["db"])
+  return check_user(db)
+
 
 # Convenience function for JSON CGI output. Also helpful for other scripts that use the same structure.
 def output(data, status=200, force_str=False):

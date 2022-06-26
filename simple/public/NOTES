@@ -32,6 +32,7 @@ How easy can we make it to check the database?
 
 Later nice-to-haves:
 - Good user-data system, easy to use in Python and in JavaScript, with reasonable two-way updating
+- Install hoba.py to system with real setup.py file, not the current install.sh mess (but call setup.py from install.sh, probably)
 - By-browser data, or at least detection (so you can have different darkness settings for the same account on different devices, and so on)
 - Offer login link as:
   - blank for email to send to (also save email with account)
@@ -67,7 +68,7 @@ login.js: Login page logic
 In addition, copy hoba_config.py and edit as appropriate. It will be read by hoba.cgi
 
 MVP TODO
-- Test by copying essential files (should just be three) to a new project directory, maybe on a new computer
+- Test by copying essential files to a new project directory, maybe on a new computer
 - Write documentation explaining hoba.cgi state machine
 
 MVP done
