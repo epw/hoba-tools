@@ -34,7 +34,7 @@ const HOBA_UI = `
 }
 @keyframes fadeout {
   from {
-    background-color: blue;
+    background-color: lightblue;
   }
   to {
     background-color: orange;
@@ -616,9 +616,10 @@ WARNING: If you do not have another browser logged in, you won't be able to reco
     }
 
     async refresh_share_code() {
-	const secret = await this.api_call("?action=refresh_share_code", null, "secret");
+	const secret = await this.api_call("?action=refresh_share_code", null, "share_code");
 	if (this.api_error(secret, "Error refreshing share code.") || secret.done) {
 	    clearInterval(this.share_code_refresh);
+	    this.close_dialog();
 	    return;
 	}
 	document.getElementById("hoba-share-code").textContent = secret.share_code;

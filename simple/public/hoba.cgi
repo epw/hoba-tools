@@ -72,10 +72,10 @@ def create_user(conn, pubkey):
 
 def make_share_code(user, conn):
   cursor = conn.cursor()
-  if not hoba.select(cursor, "SELECT rowid FROM users WHERE rowid = ? AND new_browser_secret IS NOT NULL", (user,)):
-    return None
   share_code = random.randint(1e5, 1e6)
   share_code_created = datetime.now()
+  if not hoba.select(cursor, "SELECT rowid FROM users WHERE rowid = ? AND new_browser_secret IS NOT NULL", (user,)):
+    share_code = None
   cursor.execute("UPDATE users SET share_code = ?, share_code_created = ? WHERE rowid = ?",
                  (share_code, share_code_created, user))
   conn.commit()
