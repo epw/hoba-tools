@@ -613,7 +613,12 @@ WARNING: If you do not have another browser logged in, you won't be able to reco
     async grant_new() {
 	let new_user_data = {};
 	if ("newUser" in this.controls.dataset) {
-	    new_user_data = window[this.controls.dataset.newUser]() || new_user_data;
+	    new_user_data = window[this.controls.dataset.newUser]();
+	    if (new_user_data == null) {
+		return;
+	    }
+	} else {
+	    return;
 	}
 
 	document.querySelector("#hoba-share").classList.add(this.CSS.SHOW);
