@@ -94,9 +94,12 @@ def get_config():
     raise FileNotFoundError(f"No config file found at '{CONFIG_FILE}': {filename}")
   return config
 
+CONFIG = None
+
 def authenticated():
-  config = get_config()
-  return check_user(config["db"])
+  global CONFIG
+  CONFIG = get_config()
+  return check_user(CONFIG["db"])
 
 
 # Convenience function for JSON CGI output. Also helpful for other scripts that use the same structure.

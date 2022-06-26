@@ -55,6 +55,7 @@ Later nice-to-haves:
 System slowly taking shape:
 
 There will be a small directory of files a web developer can copy into a user-visible, CGI-enabled directory on their Web server.
+The install.sh script handles that on this server.
 
 hoba.py: Logic to connect to the database, and retrieve a logged-in user with a valid token. Can be imported into any CGI script that needs to authenticate the user.
 hoba.js: Library to include on main login page that knows how to do AJAX calls for the authenticated user. Ideally, would also handle logging in, attaching to known page elements for UI. For now, can handle redirects. Not smart enough to be included on a random page.
