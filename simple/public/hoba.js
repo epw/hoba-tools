@@ -80,6 +80,11 @@ const HOBA_UI = `
    <button type="button" onclick="HOBA.login()">Login</button>
   </p>
  </div>
+ <div id="hoba-nothing" class="hoba-ui-row">
+  <p>
+   To log in on a new device, open this URL on a device with an existing login, click the "Link to Log In Elsewhere" button, and scan the QR code or visit the provided URL.
+  </p>
+ </div>
  <div id="hoba-logout" class="hoba-ui-row">
   <p>
    <button type="button" onclick="HOBA.logout()">Logout</button>
@@ -237,7 +242,7 @@ class Hoba {
     update_ui() {
 	this.clear_error();
 	Array.from(document.querySelectorAll(".hoba-ui-row, .hoba-immediate-button")).map(el => el.classList.remove(this.CSS.SHOW));
-	let ids_to_show = [];
+	let ids_to_show = ["hoba-nothing"];
 	if (this.url_params.get("secret")) {
 	    ids_to_show = ["hoba-bind"];
 	} else if (localStorage.getItem(this.STORAGE + this.S.HAS_PRIVKEY)) {
