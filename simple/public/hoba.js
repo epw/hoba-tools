@@ -573,7 +573,6 @@ WARNING: If you do not have another browser logged in, you won't be able to reco
     }
 
     close_dialog() {
-	console.log("close_dialog()");
 	if (this.dialog) {
 	    this.dialog.close();
 
@@ -583,9 +582,11 @@ WARNING: If you do not have another browser logged in, you won't be able to reco
 	}
     }
     dialog_closed() {
-	console.log("Dialog closed.");
+	if (this.share_code_refresh) {
+	    clearInterval(this.share_code_refresh);
+	    this.share_code_refresh = null;
+	}
 	if (document.querySelector("#hoba-share").classList.contains(this.CSS.SHOW)) {
-	    console.log("Clear share code");
 	    this.api_call("?action=clear_share_code", null);
 	}
     }
@@ -628,6 +629,7 @@ WARNING: If you do not have another browser logged in, you won't be able to reco
 	const secret = await this.api_call("?action=refresh_share_code", null, "share_code");
 	if (this.api_error(secret, "Error refreshing share code.") || secret.done) {
 	    clearInterval(this.share_code_refresh);
+	    this.share_code_refresh = null;
 	    this.close_dialog();
 	    return;
 	}
