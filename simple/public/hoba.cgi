@@ -71,9 +71,11 @@ def create_user(conn, pubkey):
   return public_id
 
 def make_share_code(user, conn):
+  cursor = conn.cursor()
+  if not hoba.select(cursor, "SELECT rowid FROM users WHERE rowid = ? AND new_browser_secret IS NOT NULL", (user,)):
+    return None
   share_code = random.randint(1e5, 1e6)
   share_code_created = datetime.now()
-  cursor = conn.cursor()
   cursor.execute("UPDATE users SET share_code = ?, share_code_created = ? WHERE rowid = ?",
                  (share_code, share_code_created, user))
   conn.commit()
@@ -152,11 +154,22 @@ def api(params):
     conn.commit()
     hoba.output({"id": public_id})
 
+  elif a == "refresh_share_code":
+    user = hoba.get_user(DB, C[hoba.COOKIE_USER].value, C[hoba.COOKIE_TOKEN].value)
+    if not user:
+      hoba.output({"error": "Not logged in", "user": C[hoba.COOKIE_USER].value, "token": C[hoba.COOKIE_TOKEN].value}, 403)
+      return
+    share_code = make_share_code(user["rowid"], conn)
+    out_obj = {"share_code": share_code}
+    if share_code is None:
+      out_obj["done"] = True
+    hoba.output(out_obj)
   elif a == "share_code_to_secret":
     share_code = params.getfirst("share_code")
-    user = hoba.select(cursor, "SELECT rowid, public_id, new_browser_secret FROM users WHERE share_code = ? AND share_code_created > ?",
+    user = hoba.select(cursor, "SELECT rowid, public_id, new_browser_secret FROM users WHERE share_code = ? AND share_code_created > ? AND share_code IS NOT NULL",
                        (share_code, datetime.now() - timedelta(seconds=30)))
     if user:
+      cursor.execute("UPDATE users SET share_code = NULL WHERE rowid = ?", (user["rowid"],))
       hoba.output({"user": user["public_id"],
                    "secret": user["new_browser_secret"]})
     else:

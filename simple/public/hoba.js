@@ -27,6 +27,18 @@ const HOBA_UI = `
   font-size: 200%;
   font-weight: bold;
   border: inset medium gray;
+
+  animation-duration: 30s;
+  animation-name: fadeout;
+  animation-iteration-count: infinite;
+}
+@keyframes fadeout {
+  from {
+    background-color: blue;
+  }
+  to {
+    background-color: orange;
+  }
 }
 #hoba-share-code-entry {
   font-size: 200%;
@@ -602,6 +614,15 @@ WARNING: If you do not have another browser logged in, you won't be able to reco
 	}
 	return identifier.join("");
     }
+
+    async refresh_share_code() {
+	const secret = await this.api_call("?action=refresh_share_code", null, "secret");
+	if (this.api_error(secret, "Error refreshing share code.") || secret.done) {
+	    clearInterval(this.share_code_refresh);
+	    return;
+	}
+	document.getElementById("hoba-share-code").textContent = secret.share_code;
+    }
     
     async generate_share() {
 	document.querySelector("#hoba-share").classList.add(this.CSS.SHOW);
@@ -623,7 +644,8 @@ WARNING: If you do not have another browser logged in, you won't be able to reco
 
 	document.getElementById("hoba-identifier-code").textContent = this.description;
 	document.getElementById("hoba-share-code").textContent = secret.share_code;
-
+	this.share_code_refresh = setInterval(() => this.refresh_share_code(), 30 * 1000);
+	
 	const qr = qrcode(0, "L");
 	qr.addData(url.toString());
 	qr.make();
@@ -696,6 +718,7 @@ WARNING: If you do not have another browser logged in, you won't be able to reco
 	    const secret = await this.api_call("?action=share_code_to_secret", form);
 	    if (secret.error) {
 		e.target.value = "";
+		alert("Code failed. Try again. They expire in 30 seconds.");
 		return;
 	    }
 	    this.url_params.set("user", secret.user);
