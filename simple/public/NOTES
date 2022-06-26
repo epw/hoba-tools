@@ -57,7 +57,8 @@ System slowly taking shape:
 There will be a small directory of files a web developer can copy into a user-visible, CGI-enabled directory on their Web server.
 
 hoba.py: Logic to connect to the database, and retrieve a logged-in user with a valid token. Can be imported into any CGI script that needs to authenticate the user.
-hoba.js: Library to include on any page that needs to do AJAX calls for the authenticated user. Ideally, would also handle logging in, attaching to known page elements for UI.
+hoba.js: Library to include on main login page that knows how to do AJAX calls for the authenticated user. Ideally, would also handle logging in, attaching to known page elements for UI. For now, can handle redirects. Not smart enough to be included on a random page.
+hoba-auth.js: Library to include on a page that has API calls to see if the user is logged in. Can redirect to /login.html
 hoba.cgi: Server side of account management and authentication. Calls out to hoba.py for lowest level, but implements key logic, challenges, and establishing tokens.
 
 User interface, will need to be modified per site
