@@ -71,7 +71,7 @@ def create_user(conn, pubkey):
   return public_id
 
 def make_share_code(user, conn):
-  share_code = 123
+  share_code = random.randint(1e5, 1e6)
   share_code_created = datetime.now()
   cursor = conn.cursor()
   cursor.execute("UPDATE users SET share_code = ?, share_code_created = ? WHERE rowid = ?",
@@ -151,6 +151,16 @@ def api(params):
     cursor.execute("UPDATE users SET new_browser_secret = NULL WHERE rowid = ?", (user["rowid"],))
     conn.commit()
     hoba.output({"id": public_id})
+
+  elif a == "share_code_to_secret":
+    share_code = params.getfirst("share_code")
+    user = hoba.select(cursor, "SELECT rowid, public_id, new_browser_secret FROM users WHERE share_code = ? AND share_code_created > ?",
+                       (share_code, datetime.now() - timedelta(seconds=30)))
+    if user:
+      hoba.output({"user": user["public_id"],
+                   "secret": user["new_browser_secret"]})
+    else:
+      hoba.output({"error": "Code did not match."})
 
   elif a == "new_empty_account":
     old_user = hoba.get_user(DB, C[hoba.COOKIE_USER].value, C[hoba.COOKIE_TOKEN].value)

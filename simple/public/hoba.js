@@ -28,6 +28,9 @@ const HOBA_UI = `
   font-weight: bold;
   border: inset medium gray;
 }
+#hoba-share-code-entry {
+  font-size: 200%;
+}
 #hoba-qr {
   text-align: center;
 }
@@ -91,6 +94,9 @@ const HOBA_UI = `
  <div id="hoba-nothing" class="hoba-ui-row">
   <p>
    To log in on this device, open this page on a device where you already can log in, click the "Link to Log In Elsewhere" button, and <i>enter the provided code here,</i> scan the QR code, or visit the provided URL.
+  </p>
+  <p>
+   <input type="number" id="hoba-share-code-entry" onchange="HOBA.enter_share_code(event)">
   </p>
  </div>
  <div id="hoba-logout" class="hoba-ui-row">
@@ -680,6 +686,21 @@ WARNING: If you do not have another browser logged in, you won't be able to reco
 	    navigator.share({url: document.getElementById("hoba-share-link").value});
 	} else {
 	    this.copy_link();
+	}
+    }
+
+    async enter_share_code(e) {
+	if (e.target.value >= 1e5 && e.target.value <= 1e6) {
+	    const form = new FormData();
+	    form.set("share_code", e.target.value);
+	    const secret = await this.api_call("?action=share_code_to_secret", form);
+	    if (secret.error) {
+		e.target.value = "";
+		return;
+	    }
+	    this.url_params.set("user", secret.user);
+	    this.url_params.set("secret", secret.secret);
+	    await this.bind();
 	}
     }
     
