@@ -21,6 +21,13 @@ const HOBA_UI = `
   font-size: 200%;
   font-weight: bold;
 }
+#hoba-share-code {
+  margin-top: 5px;
+  text-align: center;
+  font-size: 200%;
+  font-weight: bold;
+  border: inset medium gray;
+}
 #hoba-qr {
   text-align: center;
 }
@@ -55,6 +62,7 @@ const HOBA_UI = `
   <div class="hoba-identifier">
     <div id="hoba-identifier-code"></div>
   </div>
+  <div id="hoba-share-code"></div>
   <div><div id="hoba-qr"></div></div>
   <div><span>Link to share:</span> <input type="text" id="hoba-share-link" readonly>
        <button type="button" id="hoba-copy-button" onclick="HOBA.copy_link()">Copy</button></div>
@@ -82,7 +90,7 @@ const HOBA_UI = `
  </div>
  <div id="hoba-nothing" class="hoba-ui-row">
   <p>
-   To log in on a new device, open this URL on a device with an existing login, click the "Link to Log In Elsewhere" button, and scan the QR code or visit the provided URL.
+   To log in on this device, open this page on a device where you already can log in, click the "Link to Log In Elsewhere" button, and <i>enter the provided code here,</i> scan the QR code, or visit the provided URL.
   </p>
  </div>
  <div id="hoba-logout" class="hoba-ui-row">
@@ -608,6 +616,7 @@ WARNING: If you do not have another browser logged in, you won't be able to reco
 	field.value = url;
 
 	document.getElementById("hoba-identifier-code").textContent = this.description;
+	document.getElementById("hoba-share-code").textContent = secret.share_code;
 
 	const qr = qrcode(0, "L");
 	qr.addData(url.toString());

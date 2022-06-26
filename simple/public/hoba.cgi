@@ -70,6 +70,16 @@ def create_user(conn, pubkey):
     save_pubkey(conn, userid, pubkey)
   return public_id
 
+def make_share_code(user, conn):
+  share_code = 123
+  share_code_created = datetime.now()
+  cursor = conn.cursor()
+  cursor.execute("UPDATE users SET share_code = ?, share_code_created = ? WHERE rowid = ?",
+                 (share_code, share_code_created, user))
+  conn.commit()
+  return share_code
+  
+
 def api(params):
   conn = hoba.connect(DB)
   cursor = conn.cursor()
@@ -116,7 +126,8 @@ def api(params):
     cursor.execute("UPDATE users SET new_browser_secret = ?, new_browser_secret_expiry = ?, old_browser_identifier = ? WHERE rowid = ?",
                    (secret, expiry, params.getfirst("origin_identifier"), user["rowid"]))
     conn.commit()
-    hoba.output({"secret": secret})
+    share_code = make_share_code(user["rowid"], conn)
+    hoba.output({"secret": secret, "share_code": share_code})
   elif a == "confirm_bind":
     public_id = params.getfirst("user")
     user = hoba.select(cursor, "SELECT new_browser_secret FROM users WHERE public_id = ?", (public_id,))
