@@ -14,7 +14,21 @@ The client doesn't know how to re-authenticate a token, all it can do is present
 
 It would be nice if the HOBA object used events so it was easy to say "when the user first logs in" from other scripts.
 
+---
 
+Trying to use for other projects. Starting with video-lists because it's fairly simple.
+
+Right now, it does no authentication at all, trusting in client certs instead.
+
+We want this to be quite simple.
+
+We need to protect all API calls (everything at api.cgi), but thankfully nothing else.
+
+So in theory, this could just be "check that token in cookie matches the database. If not, make a popup offering to send the user to the login page."
+
+How easy can we make it to check the database?
+
+---
 
 Later nice-to-haves:
 - Good user-data system, easy to use in Python and in JavaScript, with reasonable two-way updating
@@ -38,11 +52,18 @@ Later nice-to-haves:
 
 System slowly taking shape:
 
-There will be a small directory of files a user can copy into a user-visible, CGI-enabled directory on their Web server.
+There will be a small directory of files a web developer can copy into a user-visible, CGI-enabled directory on their Web server.
 
 hoba.py: Logic to connect to the database, and retrieve a logged-in user with a valid token. Can be imported into any CGI script that needs to authenticate the user.
 hoba.js: Library to include on any page that needs to do AJAX calls for the authenticated user. Ideally, would also handle logging in, attaching to known page elements for UI.
 hoba.cgi: Server side of account management and authentication. Calls out to hoba.py for lowest level, but implements key logic, challenges, and establishing tokens.
+
+User interface, will need to be modified per site
+login.html: Login page with basic controls. Biggest likely modifications
+login.css: Login page styling
+login.js: Login page logic
+
+In addition, copy hoba_config.py and edit as appropriate. It will be read by hoba.cgi
 
 MVP TODO
 - Test by copying essential files (should just be three) to a new project directory, maybe on a new computer
