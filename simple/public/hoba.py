@@ -73,13 +73,25 @@ def check_user(db):
 
 # Logic to support CGI programs across systems
 
+def find_config():
+  cwd = os.getenv("SCRIPT_FILENAME").rsplit("/", 1)[0]
+  while cwd and cwd != "/":
+    filename = os.path.join(cwd, CONFIG_FILE)
+    if os.path.exists(filename):
+      return filename
+    if cwd == os.getenv("DOCUMENT_ROOT"):
+      return None
+    cwd = cwd.rsplit("/", 1)[0]
+  return None
+
 def get_config():
   config = CONFIG_DEFAULTS.copy()
-  if os.path.exists(CONFIG_FILE):
-    with open(CONFIG_FILE) as f:
+  filename = find_config()
+  if filename and os.path.exists(filename):
+    with open(filename) as f:
       config.update(json.load(f))
   else:
-    raise FileNotFoundError(f"No config file found at '{CONFIG_FILE}'")
+    raise FileNotFoundError(f"No config file found at '{CONFIG_FILE}': {filename}")
   return config
 
 def authenticated():
