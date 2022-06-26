@@ -28,6 +28,8 @@ So in theory, this could just be "check that token in cookie matches the databas
 
 How easy can we make it to check the database?
 
+This was easy! Though required adding /hoba-auth.js, which ideally would just be another use of /hoba.js
+
 ---
 
 Later nice-to-haves:
@@ -46,6 +48,7 @@ Later nice-to-haves:
   - Don't give the secret until approved, otherwise JavaScript vulnerability
   - I guess this means you need some websockets? Or you could poll once every few seconds, since it's only needed while these windows are open
   - Add place to do this in "hoba-nothing" row, which is visible from the zero-state.
+  - In progress, but has the exact weakness discussed above, where there's no confirmation on the already-logged-in computer. And worse, since the new device doesn't have the old user's ID, we're looking through the database for literally any code that matches, yikes.
 - Support multiple accounts
 - Support passwords that generate private keys, for portable logins
 - "Advanced menu" for when you know what you're doing and something under the hood is wrong

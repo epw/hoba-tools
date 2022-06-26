@@ -61,7 +61,7 @@ const HOBA_UI = `
 }
 </style>
 
-<dialog id="hoba" onclick="HOBA.dialog_click(event)">
+<dialog id="hoba" onclick="HOBA.dialog_click(event)" onclose="HOBA.dialog_closed()>
  <div id="hoba-bind" class="hoba-ui-row">
    <div class="hoba-identifier">
     <div id="hoba-identifier-code-binding"></div>
@@ -573,11 +573,20 @@ WARNING: If you do not have another browser logged in, you won't be able to reco
     }
 
     close_dialog() {
+	console.log("close_dialog()");
 	if (this.dialog) {
 	    this.dialog.close();
+
 	    document.querySelector("#hoba-share").classList.remove(this.CSS.SHOW);
 	    document.getElementById("hoba-share-link").value = "";
 	    document.getElementById("hoba-qr").innerHTML = "";
+	}
+    }
+    dialog_closed() {
+	console.log("Dialog closed.");
+	if (document.querySelector("#hoba-share").classList.contains(this.CSS.SHOW)) {
+	    console.log("Clear share code");
+	    this.api_call("?action=clear_share_code", null);
 	}
     }
 

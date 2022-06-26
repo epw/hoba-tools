@@ -164,9 +164,17 @@ def api(params):
     if share_code is None:
       out_obj["done"] = True
     hoba.output(out_obj)
+  elif a == "clear_share_code":
+    user = hoba.get_user(DB, C[hoba.COOKIE_USER].value, C[hoba.COOKIE_TOKEN].value)
+    if not user:
+      hoba.output({"error": "Not logged in", "user": C[hoba.COOKIE_USER].value, "token": C[hoba.COOKIE_TOKEN].value}, 403)
+      return
+    cursor.execute("UPDATE users SET share_code = NULL, share_code_created = NULL WHERE rowid = ?", (user["rowid"],))
+    conn.commit()
+    hoba.output({"status": "success"})
   elif a == "share_code_to_secret":
     share_code = params.getfirst("share_code")
-    user = hoba.select(cursor, "SELECT rowid, public_id, new_browser_secret FROM users WHERE share_code = ? AND share_code_created > ? AND share_code IS NOT NULL",
+    user = hoba.select(cursor, "SELECT rowid, public_id, new_browser_secret FROM users WHERE share_code = ? AND share_code_created > ? AND share_code IS NOT NULL AND new_browser_secret IS NOT NULL",
                        (share_code, datetime.now() - timedelta(seconds=30)))
     if user:
       cursor.execute("UPDATE users SET share_code = NULL WHERE rowid = ?", (user["rowid"],))
