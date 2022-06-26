@@ -61,7 +61,7 @@ const HOBA_UI = `
 }
 </style>
 
-<dialog id="hoba" onclick="HOBA.dialog_click(event)" onclose="HOBA.dialog_closed()>
+<dialog id="hoba" onclick="HOBA.dialog_click(event)" onclose="HOBA.dialog_closed()">
  <div id="hoba-bind" class="hoba-ui-row">
    <div class="hoba-identifier">
     <div id="hoba-identifier-code-binding"></div>
