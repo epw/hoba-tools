@@ -9,7 +9,7 @@ dest="`realpath $1`"
 cd public/
 # Note that login.html is NOT copied, there's too much site-specific stuff.
 # hoba.py is copied into the system below when --full is added.
-cp hoba.js hoba.cgi login.css login.js "$dest"/.
+cp hoba.js hoba-auth.js hoba.cgi login.css login.js "$dest"/.
 
 if [[ $# -lt 2 ]]; then
     echo "Not doing full install (System-wide Python libraries unchanged)"

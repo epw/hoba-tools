@@ -84,8 +84,7 @@ def get_config():
 
 def authenticated():
   config = get_config()
-  db = connect(config["db"])
-  return check_user(db)
+  return check_user(config["db"])
 
 
 # Convenience function for JSON CGI output. Also helpful for other scripts that use the same structure.
