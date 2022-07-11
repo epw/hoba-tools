@@ -102,7 +102,7 @@ const HOBA_UI = `
  </div>
  <div id="hoba-nothing" class="hoba-ui-row">
   <p>
-   To log in on this device, open this page on a device where you already can log in, click the "Link to Log In Elsewhere" button, and then: &bull; enter the provided code here, &bull; scan the QR code, or &bull; visit the provided URL.
+   To log in on this device, open <a id="hoba-login-link" href="">this page</a> on a device where you already can log in, click the "Link to Log In Elsewhere" button, and then: &bull; enter the provided code here, &bull; scan the QR code, or &bull; visit the provided URL.
   </p>
   <p>
    <input type="number" id="hoba-share-code-entry" onchange="HOBA.enter_share_code(event)">
@@ -264,6 +264,8 @@ class Hoba {
 	if (this.url_params.get("secret")) {
 	    document.getElementById("hoba-identifier-code-binding").textContent = this.url_params.get("original_identifier");
 	}
+
+	document.getElementById("hoba-login-link").href = location.pathname;
 
 	this.update_ui();
     }
