@@ -157,6 +157,10 @@ class Hoba {
 	    "api": null,
 	    "unique_ui": false,
 	    "path": "/",
+	    "is_login_page": false,
+	    "login_uri": null,
+
+	    "failed_msg": "AUTH FAILED",
 	};
 	this.controls = null;
 
@@ -233,14 +237,20 @@ class Hoba {
 		this.options[option] = meta.content;
 	    }
 	}
-	if (typeof(this.options.api) != "string") {
-	    console.error("No HOBA API URL provided. It must be provided with a tag: <meta name='hoba:api' content='URL'>");
+	if (this.options.is_login_page) {
+	    if (typeof(this.options.api) != "string") {
+		console.error("No HOBA API URL provided. It must be provided with a tag: <meta name='hoba:api' content='URL'>");
+	    }
+	} else {
+	    if (typeof(this.options.login_uri) != "string") {
+		console.warn("No HOBA login page provided, make sure you've provided a custom way for the user to manage their account.");
+	    }
 	}
 
 	this.controls = document.getElementById("hoba-controls");
 	if (this.controls) {
 	    this.controls.innerHTML = HOBA_CONTROLS;
-	} else {
+	} else if (this.options.is_login_page) {
 	    console.warn("No #hoba-controls element found, make sure you've provided a custom way for the user to manage their account.");
 	}
     }
@@ -293,7 +303,9 @@ class Hoba {
     
     loaded() {
 	this.get_params();
-	this.attach_ui();
+	if (this.options.is_login_page) {
+	    this.attach_ui();
+	}
 	this.auto_login();
     }
 
@@ -607,6 +619,9 @@ WARNING: If you do not have another browser logged in, you won't be able to reco
     }
     
     present_ui() {
+	if (!this.options.is_login_page) {
+	    return;
+	}
 	this.dialog = document.getElementById("hoba");
 	if (this.options.unique_ui == "true") {
 	    this.dialog_dismissable = false;
@@ -766,6 +781,21 @@ WARNING: If you do not have another browser logged in, you won't be able to reco
 		this.present_ui();
 	    }
 	}
+    }
+
+    // To be called on API responses from non-login pages
+    check_user(response) {
+	if (response.startsWith(this.options.failed_msg)) {
+	    const redirect = confirm("Not logged in. Press OK to go to login page, or Cancel to remain here.");
+	    if (redirect) {
+		const r = new URL(location);
+		r.pathname = this.options.login_uri;
+		r.searchParams.set("redirect", location);
+		location = r;
+	    }
+	    return null;
+	}
+	return true;
     }
 };
 
