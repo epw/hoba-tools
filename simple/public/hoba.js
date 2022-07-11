@@ -69,9 +69,6 @@ const HOBA_UI = `
    <p>
     <button type="button" onclick="HOBA.bind()">Bind account to this browser</button>
    </p>
-   <p>
-    <a id="hoba-new-account-page" href="index.html">New account page</a>
-   </p>
  </div>
  <div id="hoba-share">
   <div class="hoba-identifier">
@@ -105,7 +102,7 @@ const HOBA_UI = `
  </div>
  <div id="hoba-nothing" class="hoba-ui-row">
   <p>
-   To log in on this device, open this page on a device where you already can log in, click the "Link to Log In Elsewhere" button, and <i>enter the provided code here,</i> scan the QR code, or visit the provided URL.
+   To log in on this device, open this page on a device where you already can log in, click the "Link to Log In Elsewhere" button, and then: &bull; enter the provided code here, &bull; scan the QR code, or &bull; visit the provided URL.
   </p>
   <p>
    <input type="number" id="hoba-share-code-entry" onchange="HOBA.enter_share_code(event)">
@@ -765,6 +762,13 @@ WARNING: If you do not have another browser logged in, you won't be able to reco
 	this.dialog = document.getElementById("hoba");
 	this.dialog.showModal();
     }
+
+    visit_login() {
+    	const r = new URL(location);
+	r.pathname = this.options.login_uri;
+	r.searchParams.set("redirect", location);
+	location = r;
+    }
     
     async auto_login() {
 	if (!localStorage.getItem(this.STORAGE + this.S.HAS_PRIVKEY)
@@ -773,6 +777,13 @@ WARNING: If you do not have another browser logged in, you won't be able to reco
 	    return;
 	}
 
+	if (!this.options.is_login_page) {
+	    if (!this.get_cookie(this.COOKIE.TOKEN)) {
+		this.visit_login();
+	    }
+	    return;
+	}
+	
 	await this.get_user();
 	if (this.user) {
 	    this.send_login_event();
@@ -788,10 +799,7 @@ WARNING: If you do not have another browser logged in, you won't be able to reco
 	if (response.startsWith(this.options.failed_msg)) {
 	    const redirect = confirm("Not logged in. Press OK to go to login page, or Cancel to remain here.");
 	    if (redirect) {
-		const r = new URL(location);
-		r.pathname = this.options.login_uri;
-		r.searchParams.set("redirect", location);
-		location = r;
+		this.visit_login();
 	    }
 	    return null;
 	}

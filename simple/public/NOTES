@@ -28,7 +28,7 @@ So in theory, this could just be "check that token in cookie matches the databas
 
 How easy can we make it to check the database?
 
-This was easy! Though required adding /hoba-auth.js, which ideally would just be another use of /hoba.js
+This was easy! Though required improving /hoba.js and adding some new <meta> directives.
 
 ---
 
@@ -61,8 +61,7 @@ There will be a small directory of files a web developer can copy into a user-vi
 The install.sh script handles that on this server.
 
 hoba.py: Logic to connect to the database, and retrieve a logged-in user with a valid token. Can be imported into any CGI script that needs to authenticate the user.
-hoba.js: Library to include on main login page that knows how to do AJAX calls for the authenticated user. Ideally, would also handle logging in, attaching to known page elements for UI. For now, can handle redirects. Not smart enough to be included on a random page.
-hoba-auth.js: Library to include on a page that has API calls to see if the user is logged in. Can redirect to /login.html
+hoba.js: Library to include on main login page that knows how to do AJAX calls for the authenticated user. Ideally, would also handle logging in, attaching to known page elements for UI. For now, can handle redirects. Smart enough to be included on a random page, where it can automatically redirect to log in.
 hoba.cgi: Server side of account management and authentication. Calls out to hoba.py for lowest level, but implements key logic, challenges, and establishing tokens.
 
 User interface, will need to be modified per site

@@ -28,12 +28,14 @@ except ModuleNotFoundError:
 C = cookies.SimpleCookie(os.getenv("HTTP_COOKIE"))
 
 def confirm_bind_output():
+  print("""Location: /login.html\n""")
+  return
   print("""Content-Type: text/html
 
 <html>
 <head>
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<link rel="stylesheet" href="style.css">
+<link rel="stylesheet" href="login.css">
 <script src="hoba.js"></script>
 <meta name="hoba:api" content="hoba.cgi">
 <meta name="hoba:unique_ui" content="true">
