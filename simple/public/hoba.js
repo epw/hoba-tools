@@ -156,7 +156,8 @@ class Hoba {
 	    "path": "/",
 	    "is_login_page": false,
 	    "login_uri": null,
-
+	    "login_iframe": false,
+	    
 	    "failed_msg": "AUTH FAILED",
 	};
 	this.controls = null;
@@ -616,7 +617,7 @@ WARNING: If you do not have another browser logged in, you won't be able to reco
 	    this.dialog.close();
 	}
     }
-    
+
     present_ui() {
 	if (!this.options.is_login_page) {
 	    return;
@@ -766,9 +767,20 @@ WARNING: If you do not have another browser logged in, you won't be able to reco
     }
 
     visit_login() {
+	console.log("Visit login");
     	const r = new URL(location);
 	r.pathname = this.options.login_uri;
 	r.searchParams.set("redirect", location);
+
+	if (this.options.login_iframe) {
+	    console.log("Using iframe");
+	    const iframe = document.createElement("iframe");
+	    iframe.src = r;
+	    iframe.style.display = "none";
+	    document.body.appendChild(iframe);
+	    return;
+	}
+	
 	location = r;
     }
     
