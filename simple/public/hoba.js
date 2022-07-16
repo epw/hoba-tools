@@ -187,6 +187,10 @@ class Hoba {
 	    AUTO: "auto",
 	};
 
+	this.MESSAGES = {
+	    LOGIN_SUCCESS: "login_success",
+	};
+
 	this.db = null;
 	const db_request = indexedDB.open("hoba", 1);
 	db_request.onerror = e => {
@@ -203,7 +207,7 @@ class Hoba {
 	    hoba_store.put(null, this.S.PRIVKEY);
 	};
 	
-	// Events other scripts can listen for on <body>
+	// Events other scripts can listen for on document.
 	this.EVENTS = {
 	    LOGIN: "LOGIN",
 	    LOGOUT: "LOGOUT",
@@ -766,18 +770,27 @@ WARNING: If you do not have another browser logged in, you won't be able to reco
 	this.dialog.showModal();
     }
 
-    visit_login() {
-	console.log("Visit login");
+    confirm_login_message(event) {
+	if (event.data == this.MESSAGES.LOGIN_SUCCESS) {
+	    if (!this.get_cookie(this.COOKIE.TOKEN)) {
+		this.visit_login(true);
+		return;
+	    }
+	    this.send_login_event();
+	}
+    }
+    
+    visit_login(force) {
     	const r = new URL(location);
 	r.pathname = this.options.login_uri;
 	r.searchParams.set("redirect", location);
 
-	if (this.options.login_iframe) {
-	    console.log("Using iframe");
+	if (!force && this.options.login_iframe) {
 	    const iframe = document.createElement("iframe");
 	    iframe.src = r;
 	    iframe.style.display = "none";
 	    document.body.appendChild(iframe);
+	    window.addEventListener("message", () => this.confirm_login_message(), false);
 	    return;
 	}
 	
@@ -794,7 +807,9 @@ WARNING: If you do not have another browser logged in, you won't be able to reco
 	if (!this.options.is_login_page) {
 	    if (!this.get_cookie(this.COOKIE.TOKEN)) {
 		this.visit_login();
+		return;
 	    }
+	    this.send_login_event();
 	    return;
 	}
 	
@@ -808,12 +823,20 @@ WARNING: If you do not have another browser logged in, you won't be able to reco
 	}
     }
 
+    // To be called during init phase of non-login pages
+    on_login(callback) {
+	if (this.get_cookie(this.COOKIE.TOKEN)) {
+	    callback();
+	}
+	document.addEventListener(HOBA.EVENTS.LOGIN, callback);
+    }
+
     // To be called on API responses from non-login pages
     check_user(response) {
 	if (response.startsWith(this.options.failed_msg)) {
 	    const redirect = confirm("Not logged in. Press OK to go to login page, or Cancel to remain here.");
 	    if (redirect) {
-		this.visit_login();
+		this.visit_login(true);
 	    }
 	    return null;
 	}

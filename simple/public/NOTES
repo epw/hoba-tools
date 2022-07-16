@@ -12,7 +12,7 @@ The login page itself handles creating keypairs, requesting a new user from the 
 
 The client doesn't know how to re-authenticate a token, all it can do is present a token, or ask the server to generate a new one and send it along. This does mean a bad guy could interrupt a user by sending a "new token" request with their user ID, which could allow a DoS, so at some point this will have to require some kind of proof, itself.
 
-It would be nice if the HOBA object used events so it was easy to say "when the user first logs in" from other scripts.
+(Done) It would be nice if the HOBA object used events so it was easy to say "when the user first logs in" from other scripts.
 
 ---
 
