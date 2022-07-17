@@ -141,6 +141,7 @@ const HOBA_CONTROLS = `
 class Hoba {
     // Constructor sets constants, and attaches dialog element to document.
     constructor() {
+
 	this.user = null;
 
 	this.description = null;
@@ -185,6 +186,7 @@ class Hoba {
 	    HAS_PRIVKEY: "has_priv_key",
 	    USER: "user",
 	    AUTO: "auto",
+	    LOGGED_IN: "logged_in",
 	};
 
 	this.MESSAGES = {
@@ -211,6 +213,7 @@ class Hoba {
 	this.EVENTS = {
 	    LOGIN: "LOGIN",
 	    LOGOUT: "LOGOUT",
+	    LOGIN_MESSAGE: "LOGIN_MESSAGE",
 	};
 
 	this.KEY_ALG = {
@@ -306,6 +309,7 @@ class Hoba {
     }
     
     loaded() {
+	localStorage.setItem(this.STORAGE + this.S.LOGGED_IN, "");
 	this.get_params();
 	if (this.options.is_login_page) {
 	    this.attach_ui();
@@ -481,9 +485,11 @@ class Hoba {
     }
 
     send_login_event() {
+	localStorage.setItem(this.STORAGE + this.S.LOGGED_IN, "true");
 	document.dispatchEvent(new Event(this.EVENTS.LOGIN));
     }
     send_logout_event() {
+	localStorage.setItem(this.STORAGE + this.S.LOGGED_IN, "");
 	document.dispatchEvent(new Event(this.EVENTS.LOGOUT));
     }
 
@@ -551,6 +557,7 @@ class Hoba {
 	document.getElementById("hoba").close();
 	await this.get_user();
 	this.send_login_event();
+	postMessage(this.MESSAGES.LOGIN_SUCCESS, "*");
 
 	if (this.url_params.get("redirect")) {
 	    location = this.url_params.get("redirect");
@@ -770,30 +777,22 @@ WARNING: If you do not have another browser logged in, you won't be able to reco
 	this.dialog.showModal();
     }
 
-    confirm_login_message(event) {
-	if (event.data == this.MESSAGES.LOGIN_SUCCESS) {
-	    if (!this.get_cookie(this.COOKIE.TOKEN)) {
-		this.visit_login(true);
-		return;
-	    }
-	    this.send_login_event();
-	}
-    }
-    
     visit_login(force) {
     	const r = new URL(location);
 	r.pathname = this.options.login_uri;
-	r.searchParams.set("redirect", location);
 
 	if (!force && this.options.login_iframe) {
 	    const iframe = document.createElement("iframe");
 	    iframe.src = r;
 	    iframe.style.display = "none";
+	    iframe.setAttribute("scrolling", "no");
+	    iframe.style.width = "1px";
+	    iframe.style.height = "1px";
 	    document.body.appendChild(iframe);
-	    window.addEventListener("message", () => this.confirm_login_message(), false);
 	    return;
 	}
 	
+	r.searchParams.set("redirect", location);
 	location = r;
     }
     
@@ -823,12 +822,18 @@ WARNING: If you do not have another browser logged in, you won't be able to reco
 	}
     }
 
-    // To be called during init phase of non-login pages
-    on_login(callback) {
-	if (this.get_cookie(this.COOKIE.TOKEN)) {
+    on_login_callback(e, callback) {
+	if (e.key == this.STORAGE + this.S.LOGGED_IN && e.newValue) {
 	    callback();
 	}
-	document.addEventListener(HOBA.EVENTS.LOGIN, callback);
+    }
+
+    // To be called during init phase of non-login pages
+    on_login(callback) {
+	addEventListener("storage", e => this.on_login_callback(e, callback));
+	if (localStorage.getItem(this.STORAGE + this.S.LOGGED_IN)) {
+	    callback();
+	}
     }
 
     // To be called on API responses from non-login pages
