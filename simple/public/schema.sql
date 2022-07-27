@@ -13,5 +13,6 @@ CREATE TABLE keys (
        userid INT,
        pubkey TEXT,
        challenge TEXT,
-       token TEXT
+       token TEXT,
+       csrf TEXT,
 );
