@@ -1,8 +1,10 @@
+from collections import namedtuple
 from http import cookies
 import json
 import os
 import sqlite3
 import sys
+from urllib.parse import urlencode, urlunparse
 
 # HOBA constants
 
@@ -16,6 +18,13 @@ CONFIG_DEFAULTS = {
   "login": "/login.html"
 }
 
+def URL(scheme, netloc, path="", query="", fragment=""):
+  return (scheme,
+          netloc,
+          path,
+          "", # params
+          query,
+          fragment)
 
 def connect(db):
   if not os.path.exists(db):
@@ -100,6 +109,17 @@ def authenticated():
   global CONFIG
   CONFIG = get_config()
   return check_user(CONFIG["db"])
+
+def login_redirect():
+  hostname = os.getenv("HTTP_HOST")
+  return urlunparse(URL(
+    scheme="https",
+    netloc=os.getenv("HTTP_HOST"),
+    path="/login.html",
+    query=urlencode({"redirect": urlunparse(URL(
+      scheme="https",
+      netloc=os.getenv("HTTP_HOST"),
+      path=os.getenv("REQUEST_URI")))})))
 
 
 # Convenience function for JSON CGI output. Also helpful for other scripts that use the same structure.
