@@ -56,3 +56,15 @@ previously-unseen browser)
 1.  `HOBA.login()` dispatches login events
 1.  If a `redirect=` URL param exists, `HOBA.login()` redirects to the
     provided destination
+
+## Logging in Flow
+
+1.  Browser visits `/login.html`
+1.  `/hoba.js` loads initial state in `window.HOBA` object
+1.  `HOBA.attach_ui()` calls `HOBA.update_ui()` to produce HTML dialog
+    box. It finds a private key in the IndexedDB, and so makes login buttons visible.
+1.  `HOBA.auto_login()` finds a private key stored in the IndexedDB and so calls `HOBA.get_user()`
+
+(OK, so what happens next? We try to log in, and if the token is
+there, it's exactly like just after creating a user. If not, it does
+something to get a new cookie, maybe just HOBA.login()?)
