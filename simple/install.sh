@@ -6,6 +6,12 @@ if [[ $# -lt 1 ]]; then
 fi
 
 dest="`realpath $1`"
+
+# WebSockets (from root directory)
+cp -r ws "$dest"/ws/hoba
+
+
+
 cd public/
 # Note that login.html is NOT copied, there's too much site-specific stuff.
 # hoba.py is copied into the system below when --full is added.
