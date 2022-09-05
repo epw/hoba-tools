@@ -68,3 +68,50 @@ previously-unseen browser)
 (OK, so what happens next? We try to log in, and if the token is
 there, it's exactly like just after creating a user. If not, it does
 something to get a new cookie, maybe just HOBA.login()?)
+
+...
+
+## Log In New Device
+
+1.  Browser visits `/login.html`
+1.  `/hoba.js` loads initial state in `window.HOBA` object
+1.  `HOBA.attach_ui()` calls `HOBA.update_ui()` to produce HTML dialog
+    box. It finds no private key in the IndexedDB, and so makes the
+    "Log in with code" dialog available.
+1.  User opens `/login.html` on an already-logged-in device
+	*  If user is not logged in for any of the following steps,
+       standard failures are returned, and the user can simply log in
+       as above, and then restart here.
+1.  User clicks "Manage account" on logged-in device
+1.  User clicks "Link to log in elsewhere" button on logged-in device
+1.  `HOBA.generate_share()` makes an API call to `/hoba.cgi` with
+    `action=browser_secret`
+1.  `/hoba.cgi` with `action=browser_secret` checks the user has a
+    valid logged-in cookie, then generates a random secret called
+    `new_browser_secret` and sets it, and a 1-day expiration, in the
+    database. Then it calls `make_share_code()`
+1.  `make_share_code()` generates a random 6-digit number called a
+    "share code" and saves it, with its creation timestamp, in the
+    database.
+1.  `/hoba.cgi` returns the share code and the secret to the browser.
+1.  `HOBA.generate_share()` displays the share code (on the logged-in
+    device)
+1.  `HOBA.generate_share()` generates a QR code and URL for the
+    current location (presumed to be `/login.html`) with the
+    additional parameters:
+	*  `action=confirm_bind`
+	*  `user=`<public user ID>
+	*  `redirect=`<current URL>
+	*  `original_identifier=`<site-supplied data, likely visible user
+       name>
+1.  User enters share code in new device.
+1.  `HOBA.enter_share_code()` makes an API call to `/hoba.cgi` with
+    `action=share_code_to_secret`
+1.  `/hoba.cgi` with `action=share_code_to_secret` looks up a user
+    with matching valid (non-expired) share code in the database.
+	*  If the user is not found, return an error
+1.  `/hoba.cgi` clears the share code and returns the
+    `new_browser_secret` and public user ID from the database to the
+    browser.
+1.  `HOBA.enter_share_code()` on the new device loads the public user
+    ID and secert into its URL params and calls `HOBA.bind()`.
