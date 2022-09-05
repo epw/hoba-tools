@@ -115,3 +115,17 @@ something to get a new cookie, maybe just HOBA.login()?)
     browser.
 1.  `HOBA.enter_share_code()` on the new device loads the public user
     ID and secert into its URL params and calls `HOBA.bind()`.
+1.  `HOBA.bind()` creates and stores a new keypair locally.
+1.  `HOBA.bind()` makes an API call to `/hoba.cgi` with `action=bind`
+    and the public user ID, new browser secret, and new public key.
+1.  `/hoba.cgi` with `action=bind` looks up the user with the public
+    user ID in the database, and confirms its browser secret matches
+    the one provided in the API call.
+1.  `/hoba.cgi` saves the public key in the database linked to the
+    user.
+1.  `/hoba.cgi` clears the browser secret.
+1.  `/hoba.cgi` returns the public user ID to the browser.
+1.  `HOBA.bind()` stores the public user ID in localStorage and a
+    cookie.
+1.  `HOBA.bind()` calls `HOBA.login()`, and follows the [Logging In
+    Flow] as usual.
