@@ -129,3 +129,8 @@ something to get a new cookie, maybe just HOBA.login()?)
     cookie.
 1.  `HOBA.bind()` calls `HOBA.login()`, and follows the [Logging In
     Flow] as usual.
+
+Note: Does not account for 30-second share code timeout/refresh, or
+how Manage Account dialog closes after a code has been used and
+expires.
+

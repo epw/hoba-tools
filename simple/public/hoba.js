@@ -750,19 +750,20 @@ WARNING: If you do not have another browser logged in, you won't be able to reco
     }
 
     async enter_share_code(e) {
-	if (e.target.value >= 1e5 && e.target.value <= 1e6) {
-	    const form = new FormData();
-	    form.set("share_code", e.target.value);
-	    const secret = await this.api_call("?action=share_code_to_secret", form);
-	    if (secret.error) {
-		e.target.value = "";
-		alert("Code failed. Try again. They expire in 30 seconds.");
-		return;
-	    }
-	    this.url_params.set("user", secret.user);
-	    this.url_params.set("secret", secret.secret);
-	    await this.bind();
+	if (!(e.target.value >= 1e5 && e.target.value <= 1e6)) {
+	    return;
 	}
+	const form = new FormData();
+	form.set("share_code", e.target.value);
+	const secret = await this.api_call("?action=share_code_to_secret", form);
+	if (secret.error) {
+	    e.target.value = "";
+	    alert("Code failed. Try again. They expire in 30 seconds.");
+	    return;
+	}
+	this.url_params.set("user", secret.user);
+	this.url_params.set("secret", secret.secret);
+	await this.bind();
     }
     
     manage() {

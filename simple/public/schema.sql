@@ -6,7 +6,7 @@ CREATE TABLE users (
        share_code INT,
        share_code_created INT,
        old_browser_identifier TEXT,
-       acl_create_account BOOLEAN,
+       acl_create_account BOOLEAN
 );
 
 CREATE TABLE keys (
@@ -14,5 +14,11 @@ CREATE TABLE keys (
        pubkey TEXT,
        challenge TEXT,
        token TEXT,
-       csrf TEXT,
+       csrf TEXT
+);
+
+CREATE TABLE share_codes (
+       share_code INT,
+       share_code_created INT,
+       temp_name TEXT
 );
