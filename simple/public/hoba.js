@@ -755,7 +755,7 @@ WARNING: If you do not have another browser logged in, you won't be able to reco
 	}
 	const form = new FormData();
 	form.set("share_code", e.target.value);
-	const secret = await this.api_call("?action=share_code_to_secret", form);
+	const secret = await this.api_call("?action=share_code_request", form);
 	if (secret.error) {
 	    e.target.value = "";
 	    alert("Code failed. Try again. They expire in 30 seconds.");

@@ -104,7 +104,8 @@ something to get a new cookie, maybe just HOBA.login()?)
 	*  `redirect=`<current URL>
 	*  `original_identifier=`<site-supplied data, likely visible user
        name>
-1.  User enters share code in new device.
+1.  User enters share code in new device. [See below for WebSockets
+    flow](#websockets-new-device)
 1.  `HOBA.enter_share_code()` makes an API call to `/hoba.cgi` with
     `action=share_code_to_secret`
 1.  `/hoba.cgi` with `action=share_code_to_secret` looks up a user
@@ -134,3 +135,29 @@ Note: Does not account for 30-second share code timeout/refresh, or
 how Manage Account dialog closes after a code has been used and
 expires.
 
+### WebSockets New Device
+
+1.  `HOBA.enter_share_code()` connects to `/ws/hoba_new_device.py`
+1.  `HOBA.enter_share_code()` makes an API call to `/hoba.cgi` with
+    `action=share_code_request`.
+1.  `/hoba.cgi` with `action=share_code_to_secret` looks up a user
+    with matching valid (non-expired) share code in the database.
+	*  If the user is not found, return an error
+1.  `/hoba.cgi` generates a temporary name and stores it in the
+    database for the looked-up user.
+1.  `/hoba.cgi` informs the `/ws/hoba_logged_in.py` program currently
+    connected to the logged-in device of the temporary name (or that a
+    temporary name can now be found in the database), and returns the
+    temporary name to the new device.
+1.  `HOBA.enter_share_code()` displays the temporary name on the new
+    device and tells the user to confirm they would like to log in on
+    the device they got the share code from.
+1.  The user clicks OK on the logged-in device. This is relayed
+    through the WebSockets connection.
+1.  `/ws/hoba_logged_in.py` informs the `/ws/hoba_new_device.py`
+    program that it should allow the new user, then closes the
+    connection.
+1.  `/ws/hoba_new_device.py` sends a message to the new device telling
+    it to set up a keypair and what secret to use, then closes the
+    connection.
+1.  `HOBA.bind()` continues as usual.

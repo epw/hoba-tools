@@ -184,6 +184,18 @@ def api(params):
                    "secret": user["new_browser_secret"]})
     else:
       hoba.output({"error": "Code did not match."})
+  elif a == "share_code_request":
+    share_code = params.getfirst("share_code")
+    user = hoba.select(cursor, "SELECT rowid, public_id, new_browser_secret FROM users WHERE share_code = ? AND share_code_created > ? AND share_code IS NOT NULL AND new_browser_secret IS NOT NULL",
+                       (share_code, datetime.now() - timedelta(seconds=30)))
+    if not user:
+      hoba.output({"error": "Code did not match."})
+      return
+    
+    cursor.execute("UPDATE share_codes SET share_code = NULL WHERE rowid = ?", (user["rowid"],))
+    hoba.output({"user": user["public_id"],
+                 "secret": user["new_browser_secret"]})
+
 
   elif a == "new_empty_account":
     old_user = hoba.get_user(DB, C[hoba.COOKIE_USER].value, C[hoba.COOKIE_TOKEN].value)
