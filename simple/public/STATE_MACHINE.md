@@ -161,3 +161,21 @@ expires.
     it to set up a keypair and what secret to use, then closes the
     connection.
 1.  `HOBA.bind()` continues as usual.
+
+
+...
+
+Right now: so /ws/hoba/logged_in.py exists, and it expects to have its
+FIFO written to in order to tell it "go retrieve a temporary name".
+
+We connect when you click "generate link to log in new device".
+
+Now what has to happen is, when a different device calls the API with
+`share_code_request`, we somehow find the FIFO for the right browser
+and tell it "go retrieve a temporary name". Two choices: could
+actually name the FIFO after the share code (means it would have to
+change every minute, complicating selector call) or we could associate
+share codes with FIFO names and just update that. Then we look up the
+FIFO using the share code we were given, write to it, and the API call
+terminates. The new device has its own websocket connection, which
+will allow it to be told whether it was allowed to log in or not.

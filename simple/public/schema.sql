@@ -18,7 +18,6 @@ CREATE TABLE keys (
 );
 
 CREATE TABLE share_codes (
-       share_code INT,
-       share_code_created INT,
+       userid INT,
        temp_name TEXT
 );

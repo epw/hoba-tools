@@ -21,6 +21,8 @@ cp hoba.js hoba-auth.js hoba.cgi login.css login.js "$dest"/.
     ln -s "$dest"/hoba_config.py
 )
 
+mkdir -p /run/hoba/logged_in /run/hoba/new_device
+
 if [[ $# -lt 2 ]]; then
     echo "Not doing full install (System-wide Python libraries unchanged)"
     exit 0
