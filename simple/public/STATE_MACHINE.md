@@ -137,7 +137,7 @@ expires.
 
 ### WebSockets New Device
 
-1.  `HOBA.enter_share_code()` connects to `/ws/hoba_new_device.py`
+1.  `HOBA.enter_share_code()` connects to `/ws/hoba/new_device.py`
 1.  `HOBA.enter_share_code()` makes an API call to `/hoba.cgi` with
     `action=share_code_request`.
 1.  `/hoba.cgi` with `action=share_code_to_secret` looks up a user
@@ -145,7 +145,7 @@ expires.
 	*  If the user is not found, return an error
 1.  `/hoba.cgi` generates a temporary name and stores it in the
     database for the looked-up user.
-1.  `/hoba.cgi` informs the `/ws/hoba_logged_in.py` program currently
+1.  `/hoba.cgi` informs the `/ws/hoba/logged_in.py` program currently
     connected to the logged-in device of the temporary name (or that a
     temporary name can now be found in the database), and returns the
     temporary name to the new device.
@@ -154,10 +154,10 @@ expires.
     the device they got the share code from.
 1.  The user clicks OK on the logged-in device. This is relayed
     through the WebSockets connection.
-1.  `/ws/hoba_logged_in.py` informs the `/ws/hoba_new_device.py`
+1.  `/ws/hoba/logged_in.py` informs the `/ws/hoba/new_device.py`
     program that it should allow the new user, then closes the
     connection.
-1.  `/ws/hoba_new_device.py` sends a message to the new device telling
+1.  `/ws/hoba/new_device.py` sends a message to the new device telling
     it to set up a keypair and what secret to use, then closes the
     connection.
 1.  `HOBA.bind()` continues as usual.

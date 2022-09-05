@@ -661,6 +661,18 @@ WARNING: If you do not have another browser logged in, you won't be able to reco
 	}
 	document.getElementById("hoba-share-code").textContent = secret.share_code;
     }
+
+    ws_url(path) {
+	const url = new URL(location);
+	url.protocol = "wss:";
+	url.pathname = "/ws/hoba/" + path;
+	return url;
+    }
+    
+    establish_logged_in_ws() {
+	this.ws = new WebSocket(this.ws_url("logged_in.py"));
+	this.ws.onmessage = e => this.onmessage_logged_in_ws(e);
+    }
     
     async generate_share() {
 	document.querySelector("#hoba-share").classList.add(this.CSS.SHOW);
@@ -688,8 +700,14 @@ WARNING: If you do not have another browser logged in, you won't be able to reco
 	qr.addData(url.toString());
 	qr.make();
 	document.getElementById("hoba-qr").innerHTML = qr.createImgTag(5);
+
+	this.establish_logged_in_ws();
     }
 
+    onmessage_logged_in_ws(e) {
+	console.log("Message from WS:", e.data);
+    }
+    
     async grant_new() {
 	let new_user_data = {};
 	if ("newUser" in this.controls.dataset) {
