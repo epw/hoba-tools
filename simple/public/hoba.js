@@ -671,13 +671,20 @@ WARNING: If you do not have another browser logged in, you won't be able to reco
     
     establish_logged_in_ws() {
 	this.ws = new WebSocket(this.ws_url("logged_in.py"));
-	this.ws.onmessage = e => this.onmessage_logged_in_ws(e);
+	this.ws.onmessage = e => this.logged_in_message_pid(e);
     }
     
     async generate_share() {
 	document.querySelector("#hoba-share").classList.add(this.CSS.SHOW);
 	
-	const field = document.getElementById("hoba-share-link");
+	this.establish_logged_in_ws();
+    }
+
+    async logged_in_message_pid(e) {
+	document.getElementById("hoba-identifier-code").textContent = this.description;
+	document.getElementById("hoba-share-code").textContent = secret.share_code;
+	this.share_code_refresh = setInterval(() => this.refresh_share_code(), 30 * 1000);
+/*	const field = document.getElementById("hoba-share-link");
 	const url = new URL(this.options.api, location);
 	const params = new URLSearchParams();
 	params.set("action", "confirm_bind");
@@ -691,23 +698,14 @@ WARNING: If you do not have another browser logged in, you won't be able to reco
 	params.set("secret", secret.secret);
 	url.search = params;
 	field.value = url;
-
-	document.getElementById("hoba-identifier-code").textContent = this.description;
-	document.getElementById("hoba-share-code").textContent = secret.share_code;
-	this.share_code_refresh = setInterval(() => this.refresh_share_code(), 30 * 1000);
 	
 	const qr = qrcode(0, "L");
 	qr.addData(url.toString());
 	qr.make();
 	document.getElementById("hoba-qr").innerHTML = qr.createImgTag(5);
-
-	this.establish_logged_in_ws();
+*/
     }
 
-    onmessage_logged_in_ws(e) {
-	console.log("Message from WS:", e.data);
-    }
-    
     async grant_new() {
 	let new_user_data = {};
 	if ("newUser" in this.controls.dataset) {

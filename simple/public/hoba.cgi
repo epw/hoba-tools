@@ -76,10 +76,12 @@ def make_share_code(user, conn):
   cursor = conn.cursor()
   share_code = random.randint(1e5, 1e6)
   share_code_created = datetime.now()
-  if not hoba.select(cursor, "SELECT rowid FROM users WHERE rowid = ? AND new_browser_secret IS NOT NULL", (user,)):
-    share_code = None
-  cursor.execute("UPDATE users SET share_code = ?, share_code_created = ? WHERE rowid = ?",
-                 (share_code, share_code_created, user))
+  if not hoba.select(cursor, "SELECT rowid FROM users WHERE rowid = ?", (user,)):
+    return None
+#  cursor.execute("UPDATE users SET share_code = ?, share_code_created = ? WHERE rowid = ?",
+#                 (share_code, share_code_created, user))
+  cursor.execute("INSERT INTO share_codes (userid, share_code, share_code_creaed) VALUES (?, ?, ?)",
+                 (user, share_code, share_code_created))
   conn.commit()
   return share_code
   
@@ -163,15 +165,15 @@ def api(params):
       return
     share_code = make_share_code(user["rowid"], conn)
     out_obj = {"share_code": share_code}
-    if share_code is None:
-      out_obj["done"] = True
+#    if share_code is None:
+#      out_obj["done"] = True
     hoba.output(out_obj)
   elif a == "clear_share_code":
     user = hoba.get_user(DB, C[hoba.COOKIE_USER].value, C[hoba.COOKIE_TOKEN].value)
     if not user:
       hoba.output({"error": "Not logged in", "user": C[hoba.COOKIE_USER].value, "token": C[hoba.COOKIE_TOKEN].value}, 403)
       return
-    cursor.execute("UPDATE users SET share_code = NULL, share_code_created = NULL WHERE rowid = ?", (user["rowid"],))
+    cursor.execute("DELETE FROM share_codes WHERE userid = ?", (user["rowid"],))
     conn.commit()
     hoba.output({"status": "success"})
   elif a == "share_code_to_secret":
