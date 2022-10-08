@@ -373,7 +373,10 @@ class Hoba {
 	document.getElementById("hoba-error-message").innerHTML += msg;
     }
     clear_error() {
-	document.getElementById("hoba-error-message").innerHTML = "";
+	const el = document.getElementById("hoba-error-message");
+	if (el) {
+	    el.innerHTML = "";
+	}
     }
     
     // Convenience wrapper for AJAX call
