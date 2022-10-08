@@ -673,6 +673,7 @@ WARNING: If you do not have another browser logged in, you won't be able to reco
     }
     
     establish_logged_in_ws() {
+	console.log("Connecting");
 	this.ws = new WebSocket(this.ws_url("logged_in.py"));
 	this.ws.onmessage = e => this.logged_in_message_pid(e);
     }
@@ -684,6 +685,7 @@ WARNING: If you do not have another browser logged in, you won't be able to reco
     }
 
     async logged_in_message_pid(e) {
+	console.log(e);
 	document.getElementById("hoba-identifier-code").textContent = this.description;
 	document.getElementById("hoba-share-code").textContent = secret.share_code;
 	this.share_code_refresh = setInterval(() => this.refresh_share_code(), 30 * 1000);

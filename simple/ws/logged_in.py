@@ -1,6 +1,7 @@
 #! /usr/bin/env python3
 
 import atexit
+from datetime import datetime
 import json
 import os
 import random
@@ -35,14 +36,14 @@ class State(object):
     return True
 
   def make_share_code(self):
-    cursor = self.conn.cursor()
+    cursor = self.db.cursor()
     share_code = random.randint(1e5, 1e6)
     share_code_created = datetime.now()
     if not hoba.select(cursor, "SELECT rowid FROM users WHERE rowid = ?", (self.rowid,)):
       return None
-    cursor.execute("INSERT INTO share_codes (userid, share_code, share_code_creaed) VALUES (?, ?, ?)",
+    cursor.execute("INSERT INTO share_codes (userid, share_code, share_code_created) VALUES (?, ?, ?)",
                    (self.rowid, share_code, share_code_created))
-    self.conn.commit()
+    self.db.commit()
     self.share_code = share_code
     return share_code
 
@@ -62,11 +63,12 @@ def output(payload):
   sys.stdout.flush()
 
 def serve(state):
-  run = common.run_dir()
+  run = common.run_dir(sys.argv[0].rsplit(".", 1)[0].rsplit("/", 1)[-1])
   if not run:
     print("Error setting up FIFO")
     return
-  fifo_path = os.mkfifo(os.path.join(run, os.getpid() + ".fifo"))
+  fifo_path = os.path.join(run, str(os.getpid()) + ".fifo")
+  os.mkfifo(fifo_path)
   atexit.register(lambda: os.unlink(fifo_path))
 
   output({"pid": state.pid, "share_code": state.share_code})
@@ -81,7 +83,7 @@ def serve(state):
       key.data(key.fileobj, mask, state)
 
 def main():
-  user = hoba.check_user(hoba_config.DB):
+  user = hoba.check_user(hoba_config.DB)
   if not user:
     print("UNAUTHORIZED")
     exit()
