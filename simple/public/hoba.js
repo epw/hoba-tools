@@ -292,7 +292,7 @@ class Hoba {
 	    if (this.user) {
 		ids_to_show = ["hoba-manage-button", "hoba-logout", "hoba-logout-immediate", "hoba-destroy",
 			       "hoba-sharing"];
-		if (this.user[".acl_create_account"]) {
+		if (this.user._acl_create_account) {
 		    ids_to_show.push("hoba-grant-new");
 		}
 	    } else {

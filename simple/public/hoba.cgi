@@ -232,8 +232,8 @@ def api(params):
       hoba.output({"empty": True})
     else:
       data = json.loads(user["data"])
-      data[".user"] = user["public_id"]
-      data[".acl_create_account"] = not ACL_CREATE_ACCOUNT_REQUIRED or user.get("acl_create_account", False)
+      data["_user"] = user["public_id"]
+      data["_acl_create_account"] = not ACL_CREATE_ACCOUNT_REQUIRED or user.get("acl_create_account", False)
       hoba.output(data, 200)
 
   elif a == "acls":
