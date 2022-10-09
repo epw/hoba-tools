@@ -8,7 +8,6 @@ from Crypto.Signature import pkcs1_15
 from Crypto.Hash import SHA256
 from Crypto.PublicKey import RSA
 from datetime import datetime, timedelta
-import hashlib
 from http import cookies
 import json
 import os
@@ -46,12 +45,6 @@ Presenting login options...
 </html>
 """)
 
-
-def generate_secret():
-  buf = []
-  for _ in range(16):
-    buf.append(chr(random.randint(0, 128)))
-  return hashlib.sha256(bytes(datetime.isoformat(datetime.now()) + "".join(buf), "utf8")).hexdigest()
 
 def save_pubkey(conn, userid, pubkey):
   cursor = conn.cursor()
@@ -99,9 +92,7 @@ def api(params):
     public_id = create_user(conn, params.getfirst("pubkey"))
     hoba.output({"id": public_id})
   elif a == "challenge":
-    challenge = generate_secret()
-    cursor.execute("UPDATE keys SET challenge = ? WHERE pubkey = ?", (challenge, params.getfirst("pubkey")))
-    conn.commit()
+    hoba.set_challenge(conn, params.getfirst("pubkey"))
     hoba.output({"challenge": challenge})
   elif a == "token":
     challenge_key = hoba.select(cursor, "SELECT rowid, pubkey, challenge FROM keys WHERE pubkey = ?", (params.getfirst("pubkey"),))
@@ -117,7 +108,7 @@ def api(params):
     except ValueError as e:
       hoba.output({"error": str(e)})
       return
-    token = generate_secret()
+    token = hoba.generate_secret()
     cursor.execute("UPDATE keys SET challenge = NULL, token = ? WHERE rowid = ?", (token, key_row))
     conn.commit()
     hoba.output({"token": token})
@@ -127,7 +118,7 @@ def api(params):
     if not user:
       hoba.output({"error": "Not logged in", "user": C[hoba.COOKIE_USER].value, "token": C[hoba.COOKIE_TOKEN].value}, 403)
       return
-    secret = generate_secret()
+    secret = hoba.generate_secret()
     expiry = datetime.now() + timedelta(days=1)
     cursor.execute("UPDATE users SET new_browser_secret = ?, new_browser_secret_expiry = ?, old_browser_identifier = ? WHERE rowid = ?",
                    (secret, expiry, params.getfirst("origin_identifier"), user["rowid"]))
@@ -210,7 +201,7 @@ def api(params):
       return
     
     public_id = create_user(conn, None)
-    secret = generate_secret()
+    secret = hoba.generate_secret()
     expiry = datetime.now() + timedelta(days=1)
     cursor.execute("UPDATE users SET new_browser_secret = ?, new_browser_secret_expiry = ?, old_browser_identifier = ? WHERE public_id = ?",
                    (secret, expiry, params.getfirst("origin_identifier"), public_id))

@@ -58,6 +58,7 @@ const HOBA_UI = `
 }
 #hoba-tempname {
   border: medium inset #bbb;
+  margin: 3px 0;
   padding: 2px 3px;
   background: #004;
   color: #fff;
@@ -698,6 +699,7 @@ WARNING: If you do not have another browser logged in, you won't be able to reco
     establish_logged_in_ws() {
 	this.ws = new WebSocket(this.ws_url("logged_in.py"));
 	this.ws.onmessage = e => this.logged_in_message(e);
+	this.ws.onclose = e => this.close_dialog();
     }
 
     async generate_share() {
@@ -707,15 +709,23 @@ WARNING: If you do not have another browser logged in, you won't be able to reco
     }
 
     async logged_in_message(e) {
-	const secret = JSON.parse(e.data);
+	const msg = JSON.parse(e.data);
 	document.getElementById("hoba-identifier-code").textContent = this.description;
-	const share_code = document.getElementById("hoba-share-code");
-	share_code.textContent = secret.share_code;
-	if (share_code.classList.contains(this.CSS.ANIMATION)) {
-	    share_code.classList.remove(this.CSS.ANIMATION);
-	    void share_code.offsetWidth; // This magically helps reset the animation by triggering a reflow.
+	if ("share_code" in msg) {
+	    const share_code = document.getElementById("hoba-share-code");
+	    share_code.textContent = msg.share_code;
+	    if (share_code.classList.contains(this.CSS.ANIMATION)) {
+		share_code.classList.remove(this.CSS.ANIMATION);
+		void share_code.offsetWidth; // This magically helps reset the animation by triggering a reflow.
+	    }
+	    share_code.classList.add(this.CSS.ANIMATION);
+	} else if ("tempname" in msg) {
+	    if (confirm(`Allow login on device identified by "${msg.tempname}"?`)) {
+		this.ws.send(JSON.stringify({"allow_login": true}));
+	    } else {
+		this.ws.send(JSON.stringify({"allow_login": false}));
+	    }
 	}
-	share_code.classList.add(this.CSS.ANIMATION);
 	
 /*	const field = document.getElementById("hoba-share-link");
 	const url = new URL(this.options.api, location);
@@ -810,6 +820,13 @@ WARNING: If you do not have another browser logged in, you won't be able to reco
 	if (response.tempname) {
 	    document.getElementById("hoba-tempname").textContent = response.tempname;
 	    this.safe_css_class_add("hoba-tempname-show", this.CSS.SHOW);
+	}
+	if ("login" in response) {
+	    if (response["login"]) {
+		console.log("Yay, logging in");
+	    } else {
+		this.destroy();
+	    }
 	}
     }
     

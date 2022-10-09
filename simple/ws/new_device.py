@@ -15,14 +15,15 @@ sel = selectors.DefaultSelector()
 
 class State(object):
   db = None
-  pid = None
   share_code = None
   userid = None
   tempname = None
 
-  def __init__(self, share_code):
+  uds_path = None
+  
+  def __init__(self, uds_path, share_code):
     self.db = hoba.connect(hoba_config.DB)
-    self.pid = os.getpid()
+    self.uds_path = uds_path
     self.share_code = share_code
     
   def verify_share_code(self):
@@ -43,8 +44,8 @@ class State(object):
     cursor = self.db.cursor()
     tempname = "".join([chr(65 + random.randint(0, 25)) for _ in range(4)])
     if hoba.select(cursor, "SELECT share_code FROM share_codes WHERE userid = ?", (self.userid,)):
-      cursor.execute("UPDATE share_codes SET temp_name = ?, keyid = ? WHERE userid = ?",
-                     (tempname, keyid, self.userid))
+      cursor.execute("UPDATE share_codes SET temp_name = ?, keyid = ?, new_device_uds = ? WHERE userid = ?",
+                     (tempname, keyid, self.uds_path, self.userid))
     else:
       common.output({"Error": f"No matching share code found for {self.userid}"})
     self.db.commit()
@@ -56,21 +57,25 @@ class State(object):
 
   def notify_logged_in_device(self):
     cursor = self.db.cursor()
-    row = hoba.select(cursor, "SELECT logged_in_pid FROM share_codes WHERE userid = ?", (self.userid,))
+    row = hoba.select(cursor, "SELECT logged_in_uds FROM share_codes WHERE userid = ?", (self.userid,))
     if row:
-      common.send_uds(row["logged_in_pid"], "new request\n")
+      common.send_uds(row["logged_in_uds"], "new request\n")
   
 def system_read(uds, mask, state):
-  buf, address = uds.recvfrom(1024)
+  buf, _ = uds.recvfrom(1024)
   line = buf.decode("utf8").strip()
   if line == "Error":
     common.output({"Error": "Uh-oh"})
+  elif line == "login accepted":
+    common.output({"login": True})
+  elif line == "login refused":
+    common.output({"login": False})
 
 def browser_read(f, mask, state):
   print("From stdin", f.readline())
 
-def setup(msg):
-  state = State(msg["share_code"])
+def setup(uds_path, msg):
+  state = State(uds_path, msg["share_code"])
   if not state.verify_share_code():
     common.output({"Error": "Can't verify share code"})
     exit()
@@ -88,7 +93,7 @@ def serve():
   uds, uds_path = common.establish_uds(run)
 
   line = input()
-  state = setup(json.loads(line))
+  state = setup(uds_path, json.loads(line))
   
   sel.register(sys.stdin, selectors.EVENT_READ, browser_read)
   sel.register(uds, selectors.EVENT_READ, system_read)

@@ -1,7 +1,10 @@
 from collections import namedtuple
+from datetime import datetime
+import hashlib
 from http import cookies
 import json
 import os
+import random
 import sqlite3
 import sys
 from urllib.parse import urlencode, urlunparse
@@ -25,6 +28,18 @@ def URL(scheme, netloc, path="", query="", fragment=""):
           "", # params
           query,
           fragment)
+
+def generate_secret():
+  buf = []
+  for _ in range(16):
+    buf.append(chr(random.randint(0, 128)))
+  return hashlib.sha256(bytes(datetime.isoformat(datetime.now()) + "".join(buf), "utf8")).hexdigest()
+
+def set_challenge(conn, pubkey):
+  cursor = conn.cursor()
+  challenge = generate_secret()
+  cursor.execute("UPDATE keys SET challenge = ? WHERE pubkey = ?", (challenge, pubkey))
+  conn.commit()
 
 def connect(db):
   if not os.path.exists(db):

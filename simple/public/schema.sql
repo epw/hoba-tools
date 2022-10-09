@@ -19,7 +19,8 @@ CREATE TABLE share_codes (
        userid INT,
        share_code INT,
        share_code_created INT,
-       logged_in_pid INT,
+       logged_in_uds TEXT,
+       new_device_uds TEXT,
        temp_name TEXT,
        keyid INT       
 );

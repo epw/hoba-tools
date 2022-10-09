@@ -1,6 +1,7 @@
 #! /usr/bin/env python3
 
 from datetime import datetime
+import json
 import os
 import random
 import selectors
@@ -15,6 +16,7 @@ sel = selectors.DefaultSelector()
 class State(object):
   rowid = None
   tempname = None
+  keyid = None
   db = None
 
   uds_path = None
@@ -22,14 +24,14 @@ class State(object):
   def __init__(self, user):
     self.db = hoba.connect(hoba_config.DB)
     self.rowid = user["rowid"]
-    self.make_share_code()
     
   def pull_tempname(self):
     cursor = self.db.cursor()
-    row = hoba.select(cursor, "SELECT temp_name FROM share_codes WHERE userid = ?", (self.rowid,))
+    row = hoba.select(cursor, "SELECT temp_name, keyid FROM share_codes WHERE userid = ?", (self.rowid,))
     if not row:
       return False
     self.tempname = row["temp_name"]
+    self.keyid = row["keyid"]
     return True
 
   def make_share_code(self):
@@ -39,10 +41,10 @@ class State(object):
     if not hoba.select(cursor, "SELECT rowid FROM users WHERE rowid = ?", (self.rowid,)):
       return None
     if hoba.select(cursor, "SELECT share_code FROM share_codes WHERE userid = ?", (self.rowid,)):
-      cursor.execute("UPDATE share_codes SET logged_in_pid = ?, share_code = ?, share_code_created = ? WHERE userid = ?",
+      cursor.execute("UPDATE share_codes SET logged_in_uds = ?, share_code = ?, share_code_created = ? WHERE userid = ?",
                      (self.uds_path, share_code, share_code_created, self.rowid))
     else:
-      cursor.execute("INSERT INTO share_codes (userid, logged_in_pid, share_code, share_code_created) VALUES (?, ?, ?, ?)",
+      cursor.execute("INSERT INTO share_codes (userid, logged_in_uds, share_code, share_code_created) VALUES (?, ?, ?, ?)",
                      (self.rowid, self.uds_path, share_code, share_code_created))
     self.db.commit()
     self.share_code = share_code
@@ -51,20 +53,41 @@ class State(object):
   def output_share_code(self):
     common.output({"share_code": self.share_code})
 
-  
+  def send_to_new_device(self, msg):
+    cursor = self.db.cursor()
+    row = hoba.select(cursor, "SELECT new_device_uds FROM share_codes WHERE userid = ?", (self.rowid,))
+    common.send_uds(row["new_device_uds"], msg)
+    
+  def login(self):
+    cursor = self.db.cursor()
+    row = hoba.select(cursor, "SELECT pubkey FROM keys WHERE rowid = ?", (self.keyid,))
+    hoba.set_challenge(self.db, row["pubkey"])
+    row = hoba.select(cursor, "SELECT new_device_uds FROM share_codes WHERE userid = ?", (self.rowid,))
+    common.send_uds(row["new_device_uds"], "login accepted\n")
+
+  def login_refused(self):
+    cursor = self.db.cursor()
+    row = hoba.select(cursor, "SELECT new_device_uds FROM share_codes WHERE userid = ?", (self.rowid,))
+    common.send_uds(row["new_device_uds"], "login refused\n")
+
 def system_read(uds, mask, state):
-  buf, address = uds.recvfrom(1024)
+  buf, _ = uds.recvfrom(1024)
   line = buf.decode("utf8").strip()
   if line == "new request":
     if state.pull_tempname():
       common.output({"tempname": state.tempname})
-      uds.sendto(b"OK\n", address)
+      state.send_to_new_device("OK\n")
     else:
-      uds.sendto(b"Error\n", address)
+      state.send_to_new_device("Error\n")
 
 def browser_read(f, mask, state):
-  print("From stdin", f.readline())
-
+  msg = json.loads(f.readline())
+  if "allow_login" in msg:
+    if msg["allow_login"]:
+      state.login()
+    else:
+      state.login_refused()
+    exit()
   
 def serve(state):
   run = common.run_dir(sys.argv[0])
@@ -74,6 +97,7 @@ def serve(state):
   uds, uds_path = common.establish_uds(run)
   state.uds_path = uds_path
 
+  state.make_share_code()
   state.output_share_code()
   
   sel.register(sys.stdin, selectors.EVENT_READ, browser_read)
