@@ -13,9 +13,6 @@ import common
 
 sel = selectors.DefaultSelector()
 
-def output(payload):
-  print(json.dumps(payload))
-
 class State(object):
   db = None
   pid = None
@@ -53,7 +50,7 @@ class State(object):
     return tempname
 
   def output_tempname(self):
-    output({"tempname": self.tempname})
+    common.output({"tempname": self.tempname})
 
   
 def system_read(uds, mask, state):
@@ -61,7 +58,7 @@ def system_read(uds, mask, state):
   line = buf.decode("utf8").strip()
   if line == "new request":
     if state.pull_tempname():
-      output({"tempname": state.tempname})
+      common.output({"tempname": state.tempname})
       uds.sendto(b"OK\n", address)
     else:
       uds.sendto(b"Error\n", address)
@@ -72,7 +69,7 @@ def browser_read(f, mask, state):
 def setup(msg):
   state = State(msg["share_code"])
 #  if not state.verify_share_code():
-#    output({"Error": "Can't verify share code"})
+#    common.output({"Error": "Can't verify share code"})
 #    exit()
   keyid = state.make_key_entry(msg["pubkey"])
   state.make_tempname(keyid)

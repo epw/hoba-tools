@@ -52,8 +52,12 @@ const HOBA_UI = `
   font-weight: bold;
   color: #009;
 }
+#hoba-tempname-show.hoba-show {
+  display: unset;
+}
 #hoba-tempname {
-  border: medium solid white;
+  border: medium inset #bbb;
+  padding: 2px 3px;
   background: #004;
   color: #fff;
 }
@@ -788,15 +792,15 @@ WARNING: If you do not have another browser logged in, you won't be able to reco
     establish_new_device_ws(share_code, public_key) {
 	this.ws = new WebSocket(this.ws_url("new_device.py"));
 	this.ws.onmessage = e => this.new_device_message(e);
-	this.ws.send(JSON.stringify({"share_code": share_code,
-				     "pubkey": publick_key}))
+	this.ws.onopen = _ => this.ws.send(JSON.stringify({"share_code": share_code,
+							   "pubkey": public_key}));
     }
 
     async new_device_message(e) {
 	const response = JSON.parse(e.data);
 	if (response.tempname) {
 	    document.getElementById("hoba-tempname").textContent = response.tempname;
-	    this.safe_css_class_add("hoba-tempname-show", this.CSS.SHOW));
+	    this.safe_css_class_add("hoba-tempname-show", this.CSS.SHOW);
 	}
     }
     
@@ -805,7 +809,7 @@ WARNING: If you do not have another browser logged in, you won't be able to reco
 	    return;
 	}
 	const public_key = await this.new_keypair();
-	establish_new_device_ws(e.target.value, public_key);
+	this.establish_new_device_ws(e.target.value, public_key);
     }
     
     manage() {

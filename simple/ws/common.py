@@ -1,6 +1,8 @@
 import atexit
+import json
 import os
 import socket
+import sys
 
 def ensure_dir(*ds):
   for pos in range(1, len(ds)):
@@ -23,3 +25,8 @@ def establish_uds(run):
   uds.bind(uds_path)
   atexit.register(lambda: os.unlink(uds_path))
   return uds
+
+def output(payload):
+  print(json.dumps(payload))
+  sys.stdout.flush()
+

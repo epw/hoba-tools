@@ -1,7 +1,6 @@
 #! /usr/bin/env python3
 
 from datetime import datetime
-import json
 import os
 import random
 import selectors
@@ -12,9 +11,6 @@ import hoba, hoba_config
 import common
 
 sel = selectors.DefaultSelector()
-
-def output(payload):
-  print(json.dumps(payload))
 
 class State(object):
   rowid = None
@@ -54,7 +50,7 @@ class State(object):
     return share_code
 
   def output_share_code(self):
-    output({"share_code": self.share_code})
+    common.output({"share_code": self.share_code})
 
   
 def system_read(uds, mask, state):
@@ -62,7 +58,7 @@ def system_read(uds, mask, state):
   line = buf.decode("utf8").strip()
   if line == "new request":
     if state.pull_tempname():
-      output({"tempname": state.tempname})
+      common.output({"tempname": state.tempname})
       uds.sendto(b"OK\n", address)
     else:
       uds.sendto(b"Error\n", address)
@@ -81,8 +77,6 @@ def serve(state):
   state.output_share_code()
   
   sel.register(sys.stdin, selectors.EVENT_READ, browser_read)
-  sys.stdout.flush()
-
   sel.register(uds, selectors.EVENT_READ, system_read)
   
   while True:
