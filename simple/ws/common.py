@@ -4,6 +4,8 @@ import os
 import socket
 import sys
 
+LOGGED_IN_NAME = "logged_in"
+
 def ensure_dir(*ds):
   for pos in range(1, len(ds)):
     if not os.path.exists(os.path.join(*ds[:pos])):
@@ -24,9 +26,20 @@ def establish_uds(run):
   uds = socket.socket(socket.AF_UNIX, socket.SOCK_DGRAM)
   uds.bind(uds_path)
   atexit.register(lambda: os.unlink(uds_path))
-  return uds
+  return uds, uds_path
 
 def output(payload):
   print(json.dumps(payload))
   sys.stdout.flush()
 
+  
+def send_uds(uds_path, msg):
+  with socket.socket(socket.AF_UNIX, socket.SOCK_DGRAM) as uds:
+    uds.connect(uds_path)
+    if type(msg) == bytes:
+      payload = msg
+    elif type(msg) == str:
+      payload = msg.encode("utf8")
+    else:
+      payload = json.dumps(msg).encode("utf8")
+    uds.send(payload)

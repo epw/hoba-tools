@@ -29,9 +29,9 @@ class State(object):
     cursor = self.db.cursor()
     row = hoba.select(cursor, "SELECT userid FROM share_codes WHERE share_code = ? AND share_code_created > ?", (self.share_code, datetime.now() - timedelta(seconds=60)))
     if row:
-      userid = row["userid"]
+      self.userid = row["userid"]
     else:
-      userid = None
+      self.userid = None
     return row
 
   def make_key_entry(self, pubkey):
@@ -44,7 +44,9 @@ class State(object):
     tempname = "".join([chr(65 + random.randint(0, 25)) for _ in range(4)])
     if hoba.select(cursor, "SELECT share_code FROM share_codes WHERE userid = ?", (self.userid,)):
       cursor.execute("UPDATE share_codes SET temp_name = ?, keyid = ? WHERE userid = ?",
-                     (tempname, keyid, self.rowid))
+                     (tempname, keyid, self.userid))
+    else:
+      common.output({"Error": f"No matching share code found for {self.userid}"})
     self.db.commit()
     self.tempname = tempname
     return tempname
@@ -52,28 +54,30 @@ class State(object):
   def output_tempname(self):
     common.output({"tempname": self.tempname})
 
+  def notify_logged_in_device(self):
+    cursor = self.db.cursor()
+    row = hoba.select(cursor, "SELECT logged_in_pid FROM share_codes WHERE userid = ?", (self.userid,))
+    if row:
+      common.send_uds(row["logged_in_pid"], "new request\n")
   
 def system_read(uds, mask, state):
   buf, address = uds.recvfrom(1024)
   line = buf.decode("utf8").strip()
-  if line == "new request":
-    if state.pull_tempname():
-      common.output({"tempname": state.tempname})
-      uds.sendto(b"OK\n", address)
-    else:
-      uds.sendto(b"Error\n", address)
+  if line == "Error":
+    common.output({"Error": "Uh-oh"})
 
 def browser_read(f, mask, state):
   print("From stdin", f.readline())
 
 def setup(msg):
   state = State(msg["share_code"])
-#  if not state.verify_share_code():
-#    common.output({"Error": "Can't verify share code"})
-#    exit()
+  if not state.verify_share_code():
+    common.output({"Error": "Can't verify share code"})
+    exit()
   keyid = state.make_key_entry(msg["pubkey"])
   state.make_tempname(keyid)
   state.output_tempname()
+  state.notify_logged_in_device()
   return state
   
 def serve():
@@ -81,7 +85,7 @@ def serve():
   if not run:
     print("Error setting up /run dir")
     return
-  uds = common.establish_uds(run)
+  uds, uds_path = common.establish_uds(run)
 
   line = input()
   state = setup(json.loads(line))

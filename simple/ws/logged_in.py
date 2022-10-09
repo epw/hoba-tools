@@ -17,12 +17,11 @@ class State(object):
   tempname = None
   db = None
 
-  pid = None
+  uds_path = None
   
   def __init__(self, user):
     self.db = hoba.connect(hoba_config.DB)
     self.rowid = user["rowid"]
-    self.pid = os.getpid()
     self.make_share_code()
     
   def pull_tempname(self):
@@ -40,11 +39,11 @@ class State(object):
     if not hoba.select(cursor, "SELECT rowid FROM users WHERE rowid = ?", (self.rowid,)):
       return None
     if hoba.select(cursor, "SELECT share_code FROM share_codes WHERE userid = ?", (self.rowid,)):
-      cursor.execute("UPDATE share_codes SET share_code = ?, share_code_created = ? WHERE userid = ?",
-                     (share_code, share_code_created, self.rowid))
+      cursor.execute("UPDATE share_codes SET logged_in_pid = ?, share_code = ?, share_code_created = ? WHERE userid = ?",
+                     (self.uds_path, share_code, share_code_created, self.rowid))
     else:
-      cursor.execute("INSERT INTO share_codes (userid, share_code, share_code_created) VALUES (?, ?, ?)",
-                     (self.rowid, share_code, share_code_created))
+      cursor.execute("INSERT INTO share_codes (userid, logged_in_pid, share_code, share_code_created) VALUES (?, ?, ?, ?)",
+                     (self.rowid, self.uds_path, share_code, share_code_created))
     self.db.commit()
     self.share_code = share_code
     return share_code
@@ -72,7 +71,8 @@ def serve(state):
   if not run:
     print("Error setting up /run dir")
     return
-  uds = common.establish_uds(run)
+  uds, uds_path = common.establish_uds(run)
+  state.uds_path = uds_path
 
   state.output_share_code()
   
