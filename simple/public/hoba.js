@@ -102,7 +102,8 @@ const HOBA_UI = `
  </div>
  <div id="hoba-nothing" class="hoba-ui-row">
   <p>
-   To log in on this device, open <a id="hoba-login-link" href="">this page</a> on a device where you already can log in, click the "Link to Log In Elsewhere" button, and then on this device: &bull; enter the provided code below, &bull; scan the QR code, or &bull; visit the provided URL.
+   To log in on this device, open <a id="hoba-login-link" href="">this page</a> on a device where you already can log in, click the "Link to Log In Elsewhere" button, and then on this device: &bull; enter the provided code below.
+<!--&bull; scan the QR code, or &bull; visit the provided URL.-->
   </p>
   <p>
    <input type="number" id="hoba-share-code-entry" onchange="HOBA.enter_share_code(event)">
@@ -674,21 +675,19 @@ WARNING: If you do not have another browser logged in, you won't be able to reco
     
     establish_logged_in_ws() {
 	this.ws = new WebSocket(this.ws_url("logged_in.py"));
-	this.ws.onmessage = e => this.logged_in_message_pid(e);
+	this.ws.onmessage = e => this.logged_in_message(e);
     }
-    
+
     async generate_share() {
 	document.querySelector("#hoba-share").classList.add(this.CSS.SHOW);
 	
 	this.establish_logged_in_ws();
     }
 
-    async logged_in_message_pid(e) {
-	console.log(e);
+    async logged_in_message(e) {
 	const secret = JSON.parse(e.data);
 	document.getElementById("hoba-identifier-code").textContent = this.description;
 	document.getElementById("hoba-share-code").textContent = secret.share_code;
-	this.share_code_refresh = setInterval(() => this.refresh_share_code(), 30 * 1000);
 /*	const field = document.getElementById("hoba-share-link");
 	const url = new URL(this.options.api, location);
 	const params = new URLSearchParams();
@@ -770,21 +769,26 @@ WARNING: If you do not have another browser logged in, you won't be able to reco
 	}
     }
 
+    establish_new_device_ws(share_code, public_key) {
+	this.ws = new WebSocket(this.ws_url("new_device.py"));
+	this.ws.onmessage = e => this.new_device_message(e);
+	this.ws.send(JSON.stringify({"share_code": share_code,
+				     "pubkey": publick_key}))
+    }
+
+    async new_device_message(e) {
+	const secret = JSON.parse(e.data);
+	document.getElementById("hoba-identifier-code").textContent = this.description;
+	document.getElementById("hoba-share-code").textContent = secret.share_code;
+	
+    }
+    
     async enter_share_code(e) {
 	if (!(e.target.value >= 1e5 && e.target.value <= 1e6)) {
 	    return;
 	}
-	const form = new FormData();
-	form.set("share_code", e.target.value);
-	const secret = await this.api_call("?action=share_code_request", form);
-	if (secret.error) {
-	    e.target.value = "";
-	    alert("Code failed. Try again. They expire in 30 seconds.");
-	    return;
-	}
-	this.url_params.set("user", secret.user);
-	this.url_params.set("secret", secret.secret);
-	await this.bind();
+	const public_key = await this.new_keypair();
+	establish_new_device_ws(e.target.value, public_key);
     }
     
     manage() {

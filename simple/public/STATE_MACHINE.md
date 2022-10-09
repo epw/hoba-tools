@@ -157,30 +157,33 @@ expires.
 	because they expire.
 1.  The user enters the share code on the new device.
 1.  The new device generates a keypair.
-1.  `HOBA.try_share_code()` on the new device makes an API call to
-    `/hoba.cgi` with `action=try_share_code`, passing in the share
+1.  `HOBA.enter_share_code()` on the new device establishes a
+    WebSocket to `/ws/hoba/new_device.py`, passing in the share
     code and public key.
-1.  `/hoba.cgi` with `action=try_share_code` checks the share code's
-    validity.
-1.  `/hoba.cgi` generates a "temporary name" and stores it and the
-    public key with the share code, and returns it to `/hoba.js` on
-    the new device, which displays it.
-1.  `/hoba.js` on the logged-in device is notified of the login
-    attempt
-	*   HOW? This is where we need WebSockets.
-1.  `/hoba.js` on the logged-in device displays the temporary name to
-    the user and asks if this device should be allowed to log in.
-1.  If the user confirms, a challenge is stored in the database for
-    the share code.
+1.  `/ws/hoba/new_device.py` checks there is a non-expired database
+    entry for the share code.
+1.  `/ws/hoba/new_device.py` generates a "temporary name" and stores
+    it and the public key with the share code, and returns it to
+    `/hoba.js` on the new device, which displays it.
+1.  `/ws/hoba/new_device.py` notifies the `/ws/hoba/logged_in.py`
+    instance associated with the share code of the login attempt.
+1.  `/ws/hoba/logged_in.py` notifies `/hoba.js` on the logged-in
+    device, which displays the temporary name to the user and asks if
+    this device should be allowed to log in.
+1.  If the user confirms, `/hoba.js` sends a message to
+    `/ws/hoba/logged_in.py`, which generates a challenge and stores it
+    in the database for the share code.
+1.  `/ws/hoba/logged_in.py` closes the WebSocket, causing the share
+    code dialog to close.
+1.  `/ws/hoba/logged_in.py` informs `/ws/hoba/new_device.py` of the
+    challenge.
 1.  `/hoba.js` on the new device is notified of the challenge
-	*   WebSockets again?
+1.  `/hoba.js` on the new device closes the WebSockets connection.
 1.  `/hoba.js` signs the challenge and sends it to `/hoba.cgi` with
     `action=bind_challenge`.
 1.  `/hoba.cgi` with `action=bind_challenge` creates a new public key
     entry for the user, and returns the public user ID to `/hoba.js`.
 	*   The share code is deleted from the database.
-	*   `/hoba.js` on the logged-in device should be notified so
-	it can close the share dialog.
 1.  `HOBA.bind_challenge()` stores the public user ID in localStorage
     and a cookie.
 1.  `HOBA.bind()` calls `HOBA.login()`, and follows the [Logging In
