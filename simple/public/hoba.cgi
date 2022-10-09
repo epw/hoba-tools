@@ -92,7 +92,7 @@ def api(params):
     public_id = create_user(conn, params.getfirst("pubkey"))
     hoba.output({"id": public_id})
   elif a == "challenge":
-    hoba.set_challenge(conn, params.getfirst("pubkey"))
+    challenge = hoba.set_challenge(conn, params.getfirst("pubkey"))
     hoba.output({"challenge": challenge})
   elif a == "token":
     challenge_key = hoba.select(cursor, "SELECT rowid, pubkey, challenge FROM keys WHERE pubkey = ?", (params.getfirst("pubkey"),))

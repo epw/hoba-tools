@@ -40,6 +40,7 @@ def set_challenge(conn, pubkey):
   challenge = generate_secret()
   cursor.execute("UPDATE keys SET challenge = ? WHERE pubkey = ?", (challenge, pubkey))
   conn.commit()
+  return challenge
 
 def connect(db):
   if not os.path.exists(db):

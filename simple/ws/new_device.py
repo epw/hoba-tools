@@ -60,19 +60,28 @@ class State(object):
     row = hoba.select(cursor, "SELECT logged_in_uds FROM share_codes WHERE userid = ?", (self.userid,))
     if row:
       common.send_uds(row["logged_in_uds"], "new request\n")
-  
+
+  def login(self):
+    cursor = self.db.cursor()
+    row = hoba.select(cursor, "SELECT public_id FROM users WHERE rowid = ?", (self.userid,))
+    common.output({"login": True, "userid": row["public_id"]})
+
+
 def system_read(uds, mask, state):
   buf, _ = uds.recvfrom(1024)
   line = buf.decode("utf8").strip()
   if line == "Error":
     common.output({"Error": "Uh-oh"})
   elif line == "login accepted":
-    common.output({"login": True})
+    state.login()
   elif line == "login refused":
     common.output({"login": False})
 
 def browser_read(f, mask, state):
-  print("From stdin", f.readline())
+  try:
+    f.readline()
+  except KeyboardInterrupt:
+    exit()
 
 def setup(uds_path, msg):
   state = State(uds_path, msg["share_code"])

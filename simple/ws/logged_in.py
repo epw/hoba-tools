@@ -61,6 +61,8 @@ class State(object):
   def login(self):
     cursor = self.db.cursor()
     cursor.execute("UPDATE keys SET userid = ? WHERE rowid = ?", (self.rowid, self.keyid))
+    common.output({"userid": self.rowid, "keyid": self.keyid})
+    self.db.commit()
     row = hoba.select(cursor, "SELECT new_device_uds FROM share_codes WHERE userid = ?", (self.rowid,))
     common.send_uds(row["new_device_uds"], "login accepted\n")
 

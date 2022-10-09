@@ -823,11 +823,13 @@ WARNING: If you do not have another browser logged in, you won't be able to reco
 	}
 	if ("login" in response) {
 	    if (!response["login"]) {
+		alert("Login rejected.");
 		await this.clear_user();
 		this.logout();
-		location.refresh();
+		location.reload();
 		return;
 	    }
+	    localStorage.setItem(this.STORAGE + this.S.USER, response["userid"]);
 	    this.login();
 	}
     }
