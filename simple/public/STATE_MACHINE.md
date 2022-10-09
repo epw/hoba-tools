@@ -71,7 +71,7 @@ something to get a new cookie, maybe just HOBA.login()?)
 
 ...
 
-## Log In New Device
+## Log In New Device (Old)
 
 1.  Browser visits `/login.html`
 1.  `/hoba.js` loads initial state in `window.HOBA` object
@@ -134,6 +134,57 @@ something to get a new cookie, maybe just HOBA.login()?)
 Note: Does not account for 30-second share code timeout/refresh, or
 how Manage Account dialog closes after a code has been used and
 expires.
+
+## Log In New Device (New)
+
+1.  Browser visits `/login.html`
+1.  `/hoba.js` loads initial state in `window.HOBA` object
+1.  `HOBA.attach_ui()` calls `HOBA.update_ui()` to produce HTML dialog
+    box. It finds no private key in the IndexedDB, and so makes the
+    "Log in with code" dialog available.
+1.  User opens `/login.html` on an already-logged-in device
+	*  If user is not logged in for any of the following steps,
+       standard failures are returned, and the user can simply log in
+       as above, and then restart here.
+1.  User clicks "Manage account" on logged-in device
+1.  User clicks "Link to log in elsewhere" button on logged-in device
+1.  `HOBA.generate_share()` makes an API call to `/hoba.cgi` with
+    `action=share_code`
+1.  `/hoba.cgi` with action `share_code` saves a new numerical code in
+    the database, associated with the user, and returns it.
+1.  The share code is displayed on the logged-in device.
+	*   Every 60 seconds, `/hoba.js` requests a new share code
+	because they expire.
+1.  The user enters the share code on the new device.
+1.  The new device generates a keypair.
+1.  `HOBA.try_share_code()` on the new device makes an API call to
+    `/hoba.cgi` with `action=try_share_code`, passing in the share
+    code and public key.
+1.  `/hoba.cgi` with `action=try_share_code` checks the share code's
+    validity.
+1.  `/hoba.cgi` generates a "temporary name" and stores it and the
+    public key with the share code, and returns it to `/hoba.js` on
+    the new device, which displays it.
+1.  `/hoba.js` on the logged-in device is notified of the login
+    attempt
+	*   HOW? This is where we need WebSockets.
+1.  `/hoba.js` on the logged-in device displays the temporary name to
+    the user and asks if this device should be allowed to log in.
+1.  If the user confirms, a challenge is stored in the database for
+    the share code.
+1.  `/hoba.js` on the new device is notified of the challenge
+	*   WebSockets again?
+1.  `/hoba.js` signs the challenge and sends it to `/hoba.cgi` with
+    `action=bind_challenge`.
+1.  `/hoba.cgi` with `action=bind_challenge` creates a new public key
+    entry for the user, and returns the public user ID to `/hoba.js`.
+	*   The share code is deleted from the database.
+	*   `/hoba.js` on the logged-in device should be notified so
+	it can close the share dialog.
+1.  `HOBA.bind_challenge()` stores the public user ID in localStorage
+    and a cookie.
+1.  `HOBA.bind()` calls `HOBA.login()`, and follows the [Logging In
+    Flow] as usual.
 
 ### WebSockets New Device
 
