@@ -27,7 +27,8 @@ const HOBA_UI = `
   font-size: 200%;
   font-weight: bold;
   border: inset medium gray;
-
+}
+#hoba-share-code.hoba-animation {
   animation-duration: 30s;
   animation-name: fadeout;
   animation-iteration-count: infinite;
@@ -89,7 +90,7 @@ const HOBA_UI = `
   <div class="hoba-identifier">
     <div id="hoba-identifier-code"></div>
   </div>
-  <div id="hoba-share-code"></div>
+  <div id="hoba-share-code" class="hoba-animation"></div>
   <div><div id="hoba-qr"></div></div>
   <div><span>Link to share:</span> <input type="text" id="hoba-share-link" readonly>
        <button type="button" id="hoba-copy-button" onclick="HOBA.copy_link()">Copy</button></div>
@@ -190,6 +191,7 @@ class Hoba {
 
 	this.CSS = {
 	    SHOW: "hoba-show",
+	    ANIMATION: "hoba-animation",
 	};
 
 	// Keep these constants equal to values in hoba.py
@@ -707,7 +709,14 @@ WARNING: If you do not have another browser logged in, you won't be able to reco
     async logged_in_message(e) {
 	const secret = JSON.parse(e.data);
 	document.getElementById("hoba-identifier-code").textContent = this.description;
-	document.getElementById("hoba-share-code").textContent = secret.share_code;
+	const share_code = document.getElementById("hoba-share-code");
+	share_code.textContent = secret.share_code;
+	if (share_code.classList.contains(this.CSS.ANIMATION)) {
+	    share_code.classList.remove(this.CSS.ANIMATION);
+	    void share_code.offsetWidth; // This magically helps reset the animation by triggering a reflow.
+	}
+	share_code.classList.add(this.CSS.ANIMATION);
+	
 /*	const field = document.getElementById("hoba-share-link");
 	const url = new URL(this.options.api, location);
 	const params = new URLSearchParams();
