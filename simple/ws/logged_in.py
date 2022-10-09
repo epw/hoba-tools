@@ -49,18 +49,22 @@ class State(object):
 
   
 def system_read(f, mask, state):
+  fd = None
+  if type(f) == int:
+    fd = f
+    f = os.fdopen(f)
+
   line = f.read().strip()
   if line == "new request":
-    state.pull_tempname()
+    print(state.pull_tempname())
     print(state.tempname)
 
 def browser_read(f, mask, state):
-  pass
+  f.read()
   
 
 def output(payload):
-  json.dump(payload, sys.stdout)
-  sys.stdout.flush()
+  print(json.dumps(payload))
 
 def serve(state):
   run = common.run_dir(sys.argv[0].rsplit(".", 1)[0].rsplit("/", 1)[-1])
@@ -74,11 +78,14 @@ def serve(state):
   output({"pid": state.pid, "share_code": state.share_code})
   
   sel.register(sys.stdin, selectors.EVENT_READ, browser_read)
-  with open(fifo_path) as fifo:
-    sel.register(fifo, selectors.EVENT_READ, system_read)
+  sys.stdout.flush()
+
+  fifo = os.open(fifo_path, os.O_RDONLY | os.O_NONBLOCK)
+  sel.register(fifo, selectors.EVENT_READ, system_read)
   
   while True:
     events = sel.select(timeout=30.0)
+    print("Got events", events)
     for key, mask in events:
       key.data(key.fileobj, mask, state)
 
@@ -89,6 +96,6 @@ def main():
     exit()
   state = State(user)
   serve(state)
-  
+
 if __name__ == "__main__":
   main()
