@@ -42,9 +42,20 @@ const HOBA_UI = `
 }
 #hoba-share-code-entry {
   font-size: 200%;
+  max-width: 90%;
 }
 #hoba-qr {
   text-align: center;
+}
+#hoba-tempname-show {
+  display: none;
+  font-weight: bold;
+  color: #009;
+}
+#hoba-tempname {
+  border: medium solid white;
+  background: #004;
+  color: #fff;
 }
 #hoba .hoba-destroy {
   color: red;
@@ -106,7 +117,12 @@ const HOBA_UI = `
 <!--&bull; scan the QR code, or &bull; visit the provided URL.-->
   </p>
   <p>
-   <input type="number" id="hoba-share-code-entry" onchange="HOBA.enter_share_code(event)">
+   <div>
+    <input type="number" id="hoba-share-code-entry" onchange="HOBA.enter_share_code(event)">
+   </div>
+   <div id="hoba-tempname-show">
+    Now confirm the login on the device that gave you the numeric code, using the name <span id="hoba-tempname"></span>
+   </div>
   </p>
  </div>
  <div id="hoba-logout" class="hoba-ui-row">
@@ -777,10 +793,11 @@ WARNING: If you do not have another browser logged in, you won't be able to reco
     }
 
     async new_device_message(e) {
-	const secret = JSON.parse(e.data);
-	document.getElementById("hoba-identifier-code").textContent = this.description;
-	document.getElementById("hoba-share-code").textContent = secret.share_code;
-	
+	const response = JSON.parse(e.data);
+	if (response.tempname) {
+	    document.getElementById("hoba-tempname").textContent = response.tempname;
+	    this.safe_css_class_add("hoba-tempname-show", this.CSS.SHOW));
+	}
     }
     
     async enter_share_code(e) {

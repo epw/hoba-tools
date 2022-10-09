@@ -20,5 +20,6 @@ CREATE TABLE share_codes (
        share_code INT,
        share_code_created INT,
        ws_pid INT,
-       temp_name TEXT
+       temp_name TEXT,
+       keyid INT       
 );

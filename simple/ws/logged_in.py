@@ -1,12 +1,10 @@
 #! /usr/bin/env python3
 
-import atexit
 from datetime import datetime
 import json
 import os
 import random
 import selectors
-import socket
 import sys
 
 import hoba, hoba_config
@@ -74,14 +72,11 @@ def browser_read(f, mask, state):
 
   
 def serve(state):
-  run = common.run_dir(sys.argv[0].rsplit(".", 1)[0].rsplit("/", 1)[-1])
+  run = common.run_dir(sys.argv[0])
   if not run:
     print("Error setting up /run dir")
     return
-  uds_path = os.path.join(run, str(os.getpid()) + ".uds")
-  uds = socket.socket(socket.AF_UNIX, socket.SOCK_DGRAM)
-  uds.bind(uds_path)
-  atexit.register(lambda: os.unlink(uds_path))
+  uds = common.establish_uds(run)
 
   state.output_share_code()
   
