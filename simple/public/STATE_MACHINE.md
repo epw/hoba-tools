@@ -171,23 +171,12 @@ expires.
     device, which displays the temporary name to the user and asks if
     this device should be allowed to log in.
 1.  If the user confirms, `/hoba.js` sends a message to
-    `/ws/hoba/logged_in.py`, which generates a challenge and stores it
-    in the database for the share code.
-1.  `/ws/hoba/logged_in.py` closes the WebSocket, causing the share
-    code dialog to close.
+    `/ws/hoba/logged_in.py`, which links the public key to the user.
 1.  `/ws/hoba/logged_in.py` informs `/ws/hoba/new_device.py` of the
-    challenge.
-1.  `/hoba.js` on the new device is notified of the challenge
-1.  `/hoba.js` on the new device closes the WebSockets connection.
-1.  `/hoba.js` signs the challenge and sends it to `/hoba.cgi` with
-    `action=bind_challenge`.
-1.  `/hoba.cgi` with `action=bind_challenge` creates a new public key
-    entry for the user, and returns the public user ID to `/hoba.js`.
-	*   The share code is deleted from the database.
-1.  `HOBA.bind_challenge()` stores the public user ID in localStorage
-    and a cookie.
-1.  `HOBA.bind()` calls `HOBA.login()`, and follows the [Logging In
-    Flow] as usual.
+    acceptance.
+1.  `/hoba.js` on the new device is notified that logging in is now possible.
+1.  `/hoba.js` on the new device closes the WebSockets connection and
+    follows the [Logging In Flow].
 
 ### WebSockets New Device
 

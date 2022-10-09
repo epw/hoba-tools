@@ -822,11 +822,13 @@ WARNING: If you do not have another browser logged in, you won't be able to reco
 	    this.safe_css_class_add("hoba-tempname-show", this.CSS.SHOW);
 	}
 	if ("login" in response) {
-	    if (response["login"]) {
-		console.log("Yay, logging in");
-	    } else {
-		this.destroy();
+	    if (!response["login"]) {
+		await this.clear_user();
+		this.logout();
+		location.refresh();
+		return;
 	    }
+	    this.login();
 	}
     }
     

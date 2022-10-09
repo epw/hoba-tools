@@ -60,8 +60,7 @@ class State(object):
     
   def login(self):
     cursor = self.db.cursor()
-    row = hoba.select(cursor, "SELECT pubkey FROM keys WHERE rowid = ?", (self.keyid,))
-    hoba.set_challenge(self.db, row["pubkey"])
+    cursor.execute("UPDATE keys SET userid = ? WHERE rowid = ?", (self.rowid, self.keyid))
     row = hoba.select(cursor, "SELECT new_device_uds FROM share_codes WHERE userid = ?", (self.rowid,))
     common.send_uds(row["new_device_uds"], "login accepted\n")
 
