@@ -12,3 +12,7 @@ a {
     border: medium inset #444;
     padding: 4px 6px;
 }
+
+#hoba-share-code-entry {
+    max-width: 90%;
+}
