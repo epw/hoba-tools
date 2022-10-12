@@ -390,8 +390,19 @@ class Hoba {
 	return Array.prototype.map.call(new Uint8Array(buf), x=>(('00'+x.toString(16)).slice(-2))).join('');
     }
 
-    show_error(msg) {
+    show_error(msg, traceback) {
 	document.getElementById("hoba-error-message").innerHTML = msg;
+	if (traceback) {
+	    const details = document.createElement("details");
+	    const summary = document.createElement("summary");
+	    summary.textContent = "Traceback";
+	    details.appendChild(summary);
+	    const tb = document.createElement("pre");
+	    tb.classList.add("traceback");
+	    tb.textContent = traceback;
+	    details.appendChild(tb);
+	    document.getElementById("hoba-error-message").appendChild(details);
+	}
     }
     append_error(msg) {
 	document.getElementById("hoba-error-message").innerHTML += msg;
@@ -445,7 +456,11 @@ class Hoba {
 	    if ("error" in body.error) {
 		err += "<p>" + body.error.error + "</p>";
 	    }
-	    this.show_error(err);
+	    let traceback = null;
+	    if ("traceback" in body.error) {
+		traceback = body.error.traceback;
+	    }
+	    this.show_error(err, traceback);
 	    this.present_ui();
 	    return true;
 	}
@@ -539,9 +554,19 @@ class Hoba {
 	}
     }
 
+    async check_privkey() {
+	const privkey = await this.db_get(this.S.PRIVKEY);
+	if (!privkey) {
+	    const msg = document.createElement("div");
+	    msg.textContent = "Private key unexpectedly missing!";
+	    document.getElementById("hoba-error-message").appendChild(msg);
+	}
+    }
+    
     async get_user() {
 	const user = await this.api_call("?action=retrieve", null);
 	if (this.api_error(user, "Error retrieving user data.")) {
+	    this.check_privkey();
 	    this.user = null;
 	    return;
 	}
@@ -808,6 +833,41 @@ WARNING: If you do not have another browser logged in, you won't be able to reco
 	}
     }
 
+    repl() {
+	const repl = document.createElement("div");
+	const output = document.createElement("pre");
+	const input = document.createElement("input");
+	input.type = "text";
+	const enter = document.createElement("button");
+	enter.type = "button";
+	enter.textContent = "Enter";
+	repl.appendChild(output);
+	repl.appendChild(input);
+	repl.appendChild(enter);
+
+	enter.addEventListener("click", e => {
+	    output.textContent += "\n> " + input.value + "\n";
+	    try {
+		const result = eval(input.value);
+		if (result != null && typeof(result) != "undefined"
+		    && typeof(result.then) == "function") {
+		    result.then(o => {
+			window.repllast = o;
+			output.textContent += o
+		    });
+		} else {
+		    window.repllast = result;
+		    output.textContent += result;
+		}
+	    } catch (err) {
+		output.textContent += "Error: " + err;
+	    }
+	    input.value = "";
+	});
+	
+	document.body.appendChild(repl);
+    }
+    
     establish_new_device_ws(share_code, public_key) {
 	this.ws = new WebSocket(this.ws_url("new_device.py"));
 	this.ws.onmessage = e => this.new_device_message(e);

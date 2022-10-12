@@ -212,6 +212,9 @@ def api(params):
     hoba.output({"user": public_id, "secret": secret})
 
   elif a == "retrieve":
+    if hoba.COOKIE_USER not in C:
+      hoba.output({"error": "Not logged in", "user": None}, 403)
+      return
     if hoba.COOKIE_TOKEN not in C:
       hoba.output({"error": "Not logged in", "user": C[hoba.COOKIE_USER].value}, 403)
       return
