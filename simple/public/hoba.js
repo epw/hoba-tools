@@ -232,6 +232,10 @@ class Hoba {
 	    const hoba_store = db.transaction(this.OBJECTS, "readwrite").objectStore(this.OBJECTS);
 	    hoba_store.put(null, this.S.PRIVKEY);
 	};
+	// Request "persistent" rather than "best effort" storage. This doesn't seem
+	// like it should normally be necessary, going by how "best effort" is described,
+	// but the private key on my phone kept getting deleted.
+	navigator.storage.persist();
 	
 	// Events other scripts can listen for on document.
 	this.EVENTS = {
