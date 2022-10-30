@@ -249,6 +249,8 @@ class Hoba {
 	    const new_store = db.createObjectStore(this.OBJECTS);
 	    await new_store.transaction;
 	    const hoba_store = db.transaction(this.OBJECTS, "readwrite").objectStore(this.OBJECTS);
+	    alert("onupgradeneeded: Deleting private key if one is there!");
+	    console.warn("onupgradeneeded: Deleting private key if one is there!");
 	    hoba_store.put(null, this.S.PRIVKEY);
 	};
 	// Request "persistent" rather than "best effort" storage. This doesn't seem
