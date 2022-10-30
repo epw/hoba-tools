@@ -130,6 +130,25 @@ const HOBA_UI = `
     Now confirm the login on the device that gave you the numeric code, using the name <span id="hoba-tempname"></span>
    </div>
   </p>
+  <p>
+   <a href="#password" onclick="HOBA.show_password_login()">Switch to login with password instead.</a>
+  </p>
+ </div>
+ <div id="hoba-password" class="hoba-ui-row">
+  <p>
+    Enter your user ID and password to login.
+  </p>
+  <p>
+   <div>
+    <label>User ID: <input type="number" id="hoba-user-id"></label>
+   </div>
+   <div>
+    <label>Password: <input type="text" id="hoba-password"></label>
+   </div>
+   <div>
+    <button type="button" onclick="HOBA.login_with_password()">Login</buton>
+   </div>
+  </p>
  </div>
  <div id="hoba-logout" class="hoba-ui-row">
   <p>
@@ -904,6 +923,27 @@ WARNING: If you do not have another browser logged in, you won't be able to reco
 	}
 	const public_key = await this.new_keypair();
 	this.establish_new_device_ws(e.target.value, public_key);
+    }
+
+    show_password_login() {
+	this.safe_css_class_remove("hoba-nothing", this.CSS.SHOW);
+	this.show_ids(["hoba-password"]);
+    }
+    async login_with_password() {
+	const password_key = await crypto.subtle.importKey("raw",
+							   new TextEncoder().encode(password),
+							   "PBKDF2",
+							   false,
+							   ["deriveBits"]);
+	const salt = new Uint8Array(32);
+	crypto.getRandomValues(salt);
+	await crypto.subtle.deriveKey({
+	    "name": "PBKDF2",
+	    "hash": "SHA-256",
+	    "salt": salt,
+	    "iterations": 20000
+	},
+				     );				      
     }
     
     manage() {
