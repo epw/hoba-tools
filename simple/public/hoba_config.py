@@ -1,2 +1,1 @@
-DB = "/var/local/eric/hoba.sqlite"
-ACL_CREATE_ACCOUNT_REQUIRED = False
+/home/eric/www/hoba_config.py
