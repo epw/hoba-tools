@@ -1,6 +1,7 @@
 (Just immediate things; more details in NOTES)
 
-- Find out how to make IndexedDB persist on mobile, so phone stops losing private key.
+- Make easy CSRF protection
+- Use HOBA for more sites
 - Add password-derived key support:
   - Option to enter a unique ID and password instead of a code from another device
   - Create private key from password, then continue normally.

@@ -8,6 +8,7 @@ import random
 import sqlite3
 import sys
 from urllib.parse import urlencode, urlunparse
+import uuid
 
 # HOBA constants
 
@@ -63,7 +64,7 @@ def select_all(cursor, statement, *args):
   cursor.execute(statement, *args)
   return cursor.fetchall()
 
-def get_user_identified(db, token, rowid=None, public_id=None):
+def get_user_identified(db, token, rowid=None, public_id=None, csrf=None):
   conn = connect(db)
   cursor = conn.cursor()
   selector = None
@@ -78,23 +79,34 @@ def get_user_identified(db, token, rowid=None, public_id=None):
   user = select(cursor, select_statement, (value,))
   if user is None:
     return None
-  rows = select_all(cursor, "SELECT token FROM keys WHERE userid = ?", (user["rowid"],))
+  where = "userid = ?"
+  args = [user["rowid"]]
+  if csrf:
+    where += " AND csrf = ?"
+    args.append(csrf)
+  rows = select_all(cursor, "SELECT rowid, token, csrf FROM keys WHERE userid = ?", args)
   for row in rows:
     if row and row["token"] == token:
+      ret = dict(user)
+      if csrf:
+        new_csrf = str(uuid.uuid4())
+        cursor.execute("UPDATE keys SET csrf = ? WHERE rowid = ?", (new_csrf, row["rowid"]))
+        conn.commit()
+        ret["csrf"] = new_csrf
       return dict(user)
   return None
 
-def get_user(db, public_id, token):
-  return get_user_identified(db, token, public_id=public_id)
+def get_user(db, public_id, token, csrf=None):
+  return get_user_identified(db, token, public_id=public_id, csrf=None)
 
 def get_user_rowid(db, rowid, token):
   return get_user_identified(db, token, rowid=rowid)
 
-def check_user(db):
+def check_user(db, csrf=None):
   C = cookies.SimpleCookie(os.getenv("HTTP_COOKIE"))
   if (not COOKIE_USER in C) or (not COOKIE_TOKEN in C):
     return None
-  return get_user(db, C[COOKIE_USER].value, C[COOKIE_TOKEN].value)
+  return get_user(db, C[COOKIE_USER].value, C[COOKIE_TOKEN].value, csrf)
 
 # Logic to support CGI programs across systems
 
