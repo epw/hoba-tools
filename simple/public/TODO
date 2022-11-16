@@ -1,6 +1,6 @@
 (Just immediate things; more details in NOTES)
 
-- Find out how to make IndexedDB persist on mobile, so phone stops losing private key.
+- Improve UI a lot for logging in new devices. Clear button, etc
 - Add password-derived key support:
   - Option to enter a unique ID and password instead of a code from another device
   - Create private key from password, then continue normally.
