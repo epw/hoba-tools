@@ -1,1 +1,1 @@
-/home/eric/www/hoba_config.py
+/home/eric/wwww/hoba_config.py

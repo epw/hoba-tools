@@ -107,6 +107,11 @@ const HOBA_UI = `
    <button type="button" onclick="HOBA.grant_new()">Grant Account</button>
   </p>
  </div>
+ <div id="hoba-export" class="hoba-ui-row">
+  <p>
+   <button type="button" onclick="HOBA.export()">Save Key to File</button>
+  </p>
+ </div>
  <div id="hoba-create" class="hoba-ui-row">
   <p>
    <button type="button" onclick="HOBA.create()">Create Account</button>
@@ -132,6 +137,7 @@ const HOBA_UI = `
   </p>
   <p>
    <a href="#password" onclick="HOBA.show_password_login()">Switch to login with password instead.</a>
+   <label>Import Key: <input type="file" id="hoba-import-file" onchange="HOBA.import(event)"></label>
   </p>
  </div>
  <div id="hoba-password" class="hoba-ui-row">
@@ -339,7 +345,7 @@ class Hoba {
 	    ids_to_show = ["hoba-bind"];
 	} else if (localStorage.getItem(this.STORAGE + this.S.HAS_PRIVKEY)) {
 	    if (this.user) {
-		ids_to_show = ["hoba-manage-button", "hoba-logout", "hoba-logout-immediate", "hoba-destroy",
+		ids_to_show = ["hoba-manage-button", "hoba-export", "hoba-logout", "hoba-logout-immediate", "hoba-destroy",
 			       "hoba-sharing"];
 		if (this.user._acl_create_account) {
 		    ids_to_show.push("hoba-grant-new");
@@ -543,6 +549,44 @@ class Hoba {
 	this.set_cookie(this.COOKIE.USER, body["id"]);
 	console.log("User created");
 	this.login();
+    }
+
+    async export() {
+	const private_key = await this.db_get(this.S.PRIVKEY);
+	const data = await crypto.subtle.exportKey("jwk", private_key);
+	// Add extra data to JWK structure, which isn't to spec but makes this way easier.
+	data.user_id = this.get_cookie(this.COOKIE.USER);
+	data.public_key = localStorage.getItem(this.STORAGE + this.S.PUBKEY);
+
+	const download = document.createElement("a");
+	const file = new Blob([JSON.stringify(data)], {type: "application/json"});
+	download.href = URL.createObjectURL(file);
+	download.download = "hoba_priv_key.jwt.json";
+	download.textContent = "Download";
+	document.getElementById("hoba-export").appendChild(download);
+	download.click();
+    }
+
+    async load_imported_key(e) {
+	const data = JSON.parse(e.target.result);
+	const private_key = await crypto.subtle.importKey("jwk", data, this.KEY_ALG, true,
+							  ["sign"]); // does this also need to include "verify"? Failed when included, JWK limitation?
+	this.db_set(this.S.PRIVKEY, private_key);
+	localStorage.setItem(this.STORAGE + this.S.HAS_PRIVKEY, "true");
+	localStorage.setItem(this.STORAGE + this.S.PUBKEY, data.public_key);
+	localStorage.setItem(this.STORAGE + this.S.USER, data.user_id)
+	this.set_cookie(this.COOKIE.USER, data.user_id);
+	this.login();
+    }
+    
+    async import(e) {
+	const input = document.getElementById("hoba-import-file");
+	if (input.files.length == 0) {
+	    return;
+	}
+	const reader = new FileReader();
+	reader.onload = e => this.load_imported_key(e);
+	reader.readAsText(input.files[0]);
     }
     
     async sign_challenge(challenge) {
