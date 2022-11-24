@@ -43,7 +43,7 @@ const HOBA_UI = `
 }
 #hoba-share-code-entry {
   font-size: 200%;
-  max-width: 90%;
+  max-width: 8ex;
 }
 #hoba-qr {
   text-align: center;
@@ -62,6 +62,10 @@ const HOBA_UI = `
   padding: 2px 3px;
   background: #004;
   color: #fff;
+}
+.tallbutton {
+  height: 2.5em;
+  vertical-align: top;
 }
 #hoba .hoba-destroy {
   color: red;
@@ -123,22 +127,31 @@ const HOBA_UI = `
   </p>
  </div>
  <div id="hoba-nothing" class="hoba-ui-row">
-  <p>
-   To log in on this device, open <a id="hoba-login-link" href="">this page</a> on a device where you already can log in, click the "Link to Log In Elsewhere" button, and then on this device: &bull; enter the provided code below.
-<!--&bull; scan the QR code, or &bull; visit the provided URL.-->
-  </p>
-  <p>
-   <div>
-    <input type="number" id="hoba-share-code-entry" onchange="HOBA.enter_share_code(event)">
-   </div>
-   <div id="hoba-tempname-show">
+  <h3>It looks like you don't have an account here. Here are your options.</h3>
+  <ul>
+   <li>If you have no account on this site, ask an admin to grant you one. They can give you a link for a new account.
+   <li>If you are logged into this site on another device:
+    <ol>
+     <li>Open this login page on that device
+     <li>Click "Manage Accounts"
+     <li>Click "Link to Log In Elsewhere"
+     <li>Enter the numeric code here on this device:
+       <input type="number" id="hoba-share-code-entry" onchange="HOBA.enter_share_code(event)">
+       <button type="button" class="tallbutton" onclick="HOBA.enter_share_code(event)">Enter</button>
+    </ol>
+   <li>If you have logged in on this device in the past, something has gone wrong. If you saved a backup key, upload it here: 
+    <input type="file" id="hoba-import-file" onchange="HOBA.import(event)">
+  </ul>
+  <div id="hoba-tempname-show">
+   <p>
     Now confirm the login on the device that gave you the numeric code, using the name <span id="hoba-tempname"></span>
-   </div>
-  </p>
+   </p>
+  </div>
+<!--
   <p>
    <a href="#password" onclick="HOBA.show_password_login()">Switch to login with password instead.</a>
-   <label>Import Key: <input type="file" id="hoba-import-file" onchange="HOBA.import(event)"></label>
   </p>
+-->
  </div>
  <div id="hoba-password" class="hoba-ui-row">
   <p>
@@ -328,7 +341,7 @@ class Hoba {
 	    document.getElementById("hoba-identifier-code-binding").textContent = this.url_params.get("original_identifier");
 	}
 
-	document.getElementById("hoba-login-link").href = location.pathname;
+//	document.getElementById("hoba-login-link").href = location.pathname;
 
 	this.update_ui();
     }
