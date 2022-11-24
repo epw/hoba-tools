@@ -156,7 +156,8 @@ const HOBA_UI = `
   </ul>
   <div id="hoba-tempname-show">
    <p>
-    Now confirm the login on the device that gave you the numeric code, using the name <span id="hoba-tempname"></span>
+    Now, show it was really you by clicking "OK" on the popup that showed up on the other device, which makes sure you have this code:
+    <div><span id="hoba-tempname"></span></div>
    </p>
   </div>
 <!--
