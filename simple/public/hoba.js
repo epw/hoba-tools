@@ -67,6 +67,12 @@ const HOBA_UI = `
   height: 2.5em;
   vertical-align: top;
 }
+#hoba ul.hoba-login-choices {
+  line-height: 150%;
+}
+#hoba ul.hoba-login-choices ol {
+  line-height: 115%;
+}
 #hoba .hoba-destroy {
   color: red;
 }
@@ -75,6 +81,9 @@ const HOBA_UI = `
 }
 #hoba-controls .hoba-immediate-button.hoba-show {
   display: unset;
+}
+#hoba .hoba-hide {
+  display: none !important;
 }
 #hoba-error-message {
   color: red;
@@ -96,14 +105,17 @@ const HOBA_UI = `
     <div id="hoba-identifier-code"></div>
   </div>
   <div id="hoba-share-code" class="hoba-animation"></div>
+  <div>(Code expires after 30 seconds. Background turns orange to warn you.)</div>
   <div><div id="hoba-qr"></div></div>
-  <div><span>Link to share:</span> <input type="text" id="hoba-share-link" readonly>
-       <button type="button" id="hoba-copy-button" onclick="HOBA.copy_link()">Copy</button></div>
-  <div><button type="button" onclick="HOBA.share_link()">Share</button></div>
+  <div class="hoba-hide">
+    <div><span>Link to share:</span> <input type="text" id="hoba-share-link" readonly>
+         <button type="button" id="hoba-copy-button" onclick="HOBA.copy_link()">Copy</button></div>
+    <div><button type="button" onclick="HOBA.share_link()">Share</button></div>
+  </div>
  </div>
  <div id="hoba-sharing" class="hoba-ui-row">
   <p>
-   <button type="button" onclick="HOBA.generate_share()">Link to Log In Elsewhere</button>
+   <button type="button" onclick="HOBA.generate_share()">Log In Elsewhere</button>
   </p>
  </div>
  <div id="hoba-grant-new" class="hoba-ui-row">
@@ -128,15 +140,15 @@ const HOBA_UI = `
  </div>
  <div id="hoba-nothing" class="hoba-ui-row">
   <h3>It looks like you don't have an account here. Here are your options.</h3>
-  <ul>
+  <ul class="hoba-login-choices">
    <li>If you have no account on this site, ask an admin to grant you one. They can give you a link for a new account.
    <li>If you are logged into this site on another device:
     <ol>
      <li>Open this login page on that device
      <li>Click "Manage Accounts"
-     <li>Click "Link to Log In Elsewhere"
+     <li>Click "Log In Elsewhere"
      <li>Enter the numeric code here on this device:
-       <input type="number" id="hoba-share-code-entry" onchange="HOBA.enter_share_code(event)">
+       <input type="number" id="hoba-share-code-entry">
        <button type="button" class="tallbutton" onclick="HOBA.enter_share_code(event)">Enter</button>
     </ol>
    <li>If you have logged in on this device in the past, something has gone wrong. If you saved a backup key, upload it here: 
@@ -230,6 +242,7 @@ class Hoba {
 
 	this.CSS = {
 	    SHOW: "hoba-show",
+	    HIDE: "hoba-hide",
 	    ANIMATION: "hoba-animation",
 	};
 
@@ -367,6 +380,10 @@ class Hoba {
 		ids_to_show = ["hoba-login", "hoba-login-immediate"];
 	    }
 	} else {
+	    this.dialog_dismissable = false;
+	    document.getElementById("hoba-close-button").classList.remove(this.CSS.SHOW);
+	    document.getElementById("hoba-close-button").classList.add(this.CSS.HIDE);
+
 	    this.api_call("?action=acls").then(acls => {
 		if (acls.create_account) {
 		    this.show_ids(["hoba-create", "hoba-create-immediate"]);
@@ -966,6 +983,7 @@ WARNING: If you do not have another browser logged in, you won't be able to reco
 	if ("login" in response) {
 	    if (!response["login"]) {
 		alert("Login rejected.");
+		console.error(response);
 		await this.clear_user();
 		this.logout();
 		location.reload();
@@ -977,11 +995,12 @@ WARNING: If you do not have another browser logged in, you won't be able to reco
     }
     
     async enter_share_code(e) {
-	if (!(e.target.value >= 1e5 && e.target.value <= 1e6)) {
+	const el = document.getElementById("hoba-share-code-entry");
+	if (!(el.value >= 1e5 && el.value <= 1e6)) {
 	    return;
 	}
 	const public_key = await this.new_keypair();
-	this.establish_new_device_ws(e.target.value, public_key);
+	this.establish_new_device_ws(el.value, public_key);
     }
 
     show_password_login() {
