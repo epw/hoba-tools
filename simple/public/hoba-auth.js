@@ -4,9 +4,14 @@ const HOBA_AUTH_VALUES = {
 };
 
 class HobaAuth {
-    check_user(text) {
-	if (text.startsWith(HOBA_AUTH_VALUES.FAILED)) {
-	    const redirect = confirm("Not logged in. Press OK to go to login page, or Cancel to remain here.");
+    probably_logged_in() {
+//       return text.startsWith(HOBA_AUTH_VALUES.FAILED);
+	return localStorage.getItem(".hoba.has_priv_key");
+    }
+
+    check_user(skip_prompt) {
+	if (!this.probably_logged_in()) {
+	    let redirect = skip_prompt || confirm("Not logged in. Press OK to go to login page, or Cancel to remain here.");
 	    if (redirect) {
 		const r = new URL(location);
 		r.pathname = HOBA_AUTH_VALUES.LOGIN;
