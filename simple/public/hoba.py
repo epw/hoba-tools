@@ -126,16 +126,18 @@ def authenticated():
   CONFIG = get_config()
   return check_user(CONFIG["db"])
 
-def login_redirect():
-  hostname = os.getenv("HTTP_HOST")
+def login_redirect(redirect=None):
+  if redirect is None:
+    hostname = os.getenv("HTTP_HOST")
+    redirect = urlunparse(URL(
+      scheme="https",
+      netloc=os.getenv("HTTP_HOST"),
+      path=os.getenv("REQUEST_URI")))
   return urlunparse(URL(
     scheme="https",
     netloc=os.getenv("HTTP_HOST"),
     path="/login.html",
-    query=urlencode({"redirect": urlunparse(URL(
-      scheme="https",
-      netloc=os.getenv("HTTP_HOST"),
-      path=os.getenv("REQUEST_URI")))})))
+    query=urlencode({"redirect": redirect})))
 
 
 # Convenience function for JSON CGI output. Also helpful for other scripts that use the same structure.
